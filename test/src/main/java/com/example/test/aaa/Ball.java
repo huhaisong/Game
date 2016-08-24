@@ -1,9 +1,7 @@
-package com.example.a111.game.ball;
+package com.example.test.aaa;
 
 import android.content.Context;
 import android.opengl.GLES20;
-
-import com.example.a111.game.util.ShaderUtil;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -18,7 +16,6 @@ public class Ball {
     public float angleX;  //沿x轴旋转角度
     int vCount = 0;
     int iCount = 0;
-
 
     private String mVertexShader, mFragmentShader;
     private int maPositionHandle;
