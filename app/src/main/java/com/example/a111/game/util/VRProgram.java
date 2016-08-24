@@ -1,4 +1,4 @@
-package com.example.a111.game;
+package com.example.a111.game.util;
 
 import android.opengl.GLES20;
 
