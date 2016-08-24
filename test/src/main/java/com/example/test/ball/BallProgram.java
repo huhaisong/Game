@@ -1,9 +1,8 @@
-package com.example.pickup.ball;
+package com.example.test.ball;
 
 import android.opengl.GLES20;
 
-import com.example.pickup.util.ShaderUtil;
-
+import com.example.test.util.ShaderUtil;
 
 /**
  * Created by 111 on 2016/8/23.

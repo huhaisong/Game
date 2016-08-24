@@ -1,17 +1,19 @@
-package com.example.a111.game;
+package com.example.test.ball;
 
 import android.opengl.GLES20;
 import android.opengl.Matrix;
 
-import com.example.a111.game.util.VectorUtil;
+import com.example.test.MySurfaceView;
+import com.example.test.TouchableObject;
+import com.example.test.util.AABB3;
+import com.example.test.util.MatrixState;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 import java.util.ArrayList;
 
-public class BaseBall {
-
+public class BaseBall extends TouchableObject {
 
     private float[] mProjMatrix = new float[16];//4x4矩阵 投影用
     private float[] mVMatrix = new float[16];//摄像机位置朝向9参数矩阵
@@ -23,17 +25,12 @@ public class BaseBall {
 
     public boolean collision = false;
 
-    public VRProgram mVRProgram;
+    public BallProgram mBallProgram;
 
     FloatBuffer mVertexBuffer;//顶点坐标数据缓冲
     FloatBuffer mTexCoorBuffer;//顶点纹理坐标数据缓冲
     FloatBuffer mNormalBuffer;//顶点法向量数据缓冲
     int vCount = 0;
-    public float xAngle = 0;//绕x轴旋转的角度
-    public float yAngle = 0;//绕y轴旋转的角度
-    public float zAngle = 0;//绕z轴旋转的角度
-
-
     float bHalf = 0;//黄金长方形的宽
     float r = 0;//球的半径
 
@@ -60,14 +57,13 @@ public class BaseBall {
     //设置正交投影参数
     public void setProjectOrtho
     (
-            float left,		//near面的left
+            float left,        //near面的left
             float right,    //near面的right
             float bottom,   //near面的bottom
             float top,      //near面的top
-            float near,		//near面距离
+            float near,        //near面距离
             float far       //far面距离
-    )
-    {
+    ) {
         Matrix.orthoM(mProjMatrix, 0, left, right, bottom, top, near, far);
     }
 
@@ -110,9 +106,6 @@ public class BaseBall {
     {
         stackTop++;
         System.arraycopy(currMatrix, 0, mStack[stackTop], 0, 16);
-      /*  for (int i = 0; i < 16; i++) {
-            mStack[stackTop][i] = currMatrix[i];
-        }*/
     }
 
     public void popMatrix()//恢复变换矩阵
@@ -123,16 +116,19 @@ public class BaseBall {
         stackTop--;
     }
 
-    public BaseBall(MySurfaceView mv, float scale, float aHalf, int n) {
+    public BaseBall(MySurfaceView mv, float scale, float aHalf, int n, long time) {
         //调用初始化顶点数据的initVertexData方法
         initVertexData(scale, aHalf, n);
         //调用初始化着色器的intShader方法
-        if (mVRProgram == null) {
-            mVRProgram = new VRProgram();
-        }
+        mBallProgram = BallProgram.getInstance();
         setCamera(0, 0, 8.0f, 0f, 0f, 0f, 0f, 1.0f, 0.0f);
         setInitStack();
         scale(0.1f, 0.1f, 0.1f);
+        try {
+            Thread.sleep(time);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
         reStartMove();
     }
 
@@ -140,7 +136,7 @@ public class BaseBall {
         collision = false;
         setInitStack();
 
-        translate((float) (-50+Math.random()*100),(float) (-30+Math.random()*60), -150);
+        translate((float) (-50 + Math.random() * 100), (float) (-30 + Math.random() * 60), -250);
         new Thread() {
             public void run() {
                 int translateZ = 0;
@@ -148,7 +144,7 @@ public class BaseBall {
                     translateZ += 1;
                     translate(0, 0, 1);
                     try {
-                        Thread.sleep(30);
+                        Thread.sleep(300);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
@@ -166,8 +162,8 @@ public class BaseBall {
         r = (float) Math.sqrt(aHalf * aHalf + bHalf * bHalf); //半径
         vCount = 3 * 20 * n * n;//顶点个数，共有20个三角形，每个三角形都有三个顶点
         //正20面体坐标数据初始化
-        ArrayList<Float> alVertix20 = new ArrayList<Float>();//正20面体的顶点列表（未卷绕）
-        ArrayList<Integer> alFaceIndex20 = new ArrayList<Integer>();//正20面体组织成面的顶点的索引值列表（按逆时针卷绕）
+        ArrayList<Float> alVertix20 = new ArrayList<>();//正20面体的顶点列表（未卷绕）
+        ArrayList<Integer> alFaceIndex20 = new ArrayList<>();//正20面体组织成面的顶点的索引值列表（按逆时针卷绕）
         //正20面体顶点
         initAlVertix20(alVertix20, aHalf, bHalf);
         //正20面体索引
@@ -176,12 +172,12 @@ public class BaseBall {
         float[] vertices20 = VectorUtil.cullVertex(alVertix20, alFaceIndex20);//只计算顶点
 
         //坐标数据初始化
-        ArrayList<Float> alVertix = new ArrayList<Float>();//原顶点列表（未卷绕）
-        ArrayList<Integer> alFaceIndex = new ArrayList<Integer>();//组织成面的顶点的索引值列表（按逆时针卷绕）
+        ArrayList<Float> alVertix = new ArrayList<>();//原顶点列表（未卷绕）
+        ArrayList<Integer> alFaceIndex = new ArrayList<>();//组织成面的顶点的索引值列表（按逆时针卷绕）
         int vnCount = 0;//前i-1行前所有顶点数的和
         for (int k = 0; k < vertices20.length; k += 9)//对正20面体每个大三角形循环
         {
-            float[] v1 = new float[]{vertices20[k + 0], vertices20[k + 1], vertices20[k + 2]};
+            float[] v1 = new float[]{vertices20[k], vertices20[k + 1], vertices20[k + 2]};
             float[] v2 = new float[]{vertices20[k + 3], vertices20[k + 4], vertices20[k + 5]};
             float[] v3 = new float[]{vertices20[k + 6], vertices20[k + 7], vertices20[k + 8]};
             //顶点
@@ -198,7 +194,7 @@ public class BaseBall {
             //索引
             for (int i = 0; i < n; i++) {
                 if (i == 0) {//若是第0行，直接加入卷绕后顶点索引012
-                    alFaceIndex.add(vnCount + 0);
+                    alFaceIndex.add(vnCount);
                     alFaceIndex.add(vnCount + 1);
                     alFaceIndex.add(vnCount + 2);
                     vnCount += 1;
@@ -243,8 +239,8 @@ public class BaseBall {
 
         //纹理
         //正20面体纹理坐标数据初始化
-        ArrayList<Float> alST20 = new ArrayList<Float>();//正20面体的纹理坐标列表（未卷绕）
-        ArrayList<Integer> alTexIndex20 = new ArrayList<Integer>();//正20面体组织成面的纹理坐标的索引值列表（按逆时针卷绕）
+        ArrayList<Float> alST20 = new ArrayList<>();//正20面体的纹理坐标列表（未卷绕）
+        ArrayList<Integer> alTexIndex20 = new ArrayList<>();//正20面体组织成面的纹理坐标的索引值列表（按逆时针卷绕）
         //正20面体纹理坐标
         float sSpan = 1 / 5.5f;//每个纹理三角形的边长
         float tSpan = 1 / 3.0f;//每个纹理三角形的高
@@ -270,9 +266,9 @@ public class BaseBall {
 
         //计算卷绕纹理坐标
         float[] st20 = VectorUtil.cullTexCoor(alST20, alTexIndex20);//只计算纹理坐标
-        ArrayList<Float> alST = new ArrayList<Float>();//原纹理坐标列表（未卷绕）
+        ArrayList<Float> alST = new ArrayList<>();//原纹理坐标列表（未卷绕）
         for (int k = 0; k < st20.length; k += 6) {
-            float[] st1 = new float[]{st20[k + 0], st20[k + 1], 0};//三角形的纹理坐标
+            float[] st1 = new float[]{st20[k], st20[k + 1], 0};//三角形的纹理坐标
             float[] st2 = new float[]{st20[k + 2], st20[k + 3], 0};
             float[] st3 = new float[]{st20[k + 4], st20[k + 5], 0};
             for (int i = 0; i <= n; i++) {
@@ -289,6 +285,7 @@ public class BaseBall {
         //计算卷绕后纹理坐标
         float[] textures = VectorUtil.cullTexCoor(alST, alFaceIndex);
 
+        preBox = new AABB3(vertices);
         //顶点坐标数据初始化
         ByteBuffer vbb = ByteBuffer.allocateDirect(vertices.length * 4);//创建顶点坐标数据缓冲
         vbb.order(ByteOrder.nativeOrder());//设置字节顺序为本地操作系统顺序
@@ -489,24 +486,22 @@ public class BaseBall {
     }
 
     public void drawSelf(int texId) {
-        rotate(xAngle, 1, 0, 0);
-        rotate(yAngle, 0, 1, 0);
-        rotate(zAngle, 0, 0, 1);
 
+        copyM();
         //制定使用某套shader程序
-        GLES20.glUseProgram(mVRProgram.mProgram);
+        GLES20.glUseProgram(mBallProgram.mProgram);
         //将最终变换矩阵传入shader程序
-        GLES20.glUniformMatrix4fv(mVRProgram.muMVPMatrixHandle, 1, false, getFinalMatrix(), 0);
+        GLES20.glUniformMatrix4fv(mBallProgram.muMVPMatrixHandle, 1, false, getFinalMatrix(), 0);
 
         //传送顶点位置数据
-        GLES20.glVertexAttribPointer(mVRProgram.maPositionHandle, 3, GLES20.GL_FLOAT, false, 3 * 4, mVertexBuffer);
+        GLES20.glVertexAttribPointer(mBallProgram.maPositionHandle, 3, GLES20.GL_FLOAT, false, 3 * 4, mVertexBuffer);
         //传送顶点纹理坐标数据
-        GLES20.glVertexAttribPointer(mVRProgram.maTexCoorHandle, 2, GLES20.GL_FLOAT, false, 2 * 4, mTexCoorBuffer);
+        GLES20.glVertexAttribPointer(mBallProgram.maTexCoorHandle, 2, GLES20.GL_FLOAT, false, 2 * 4, mTexCoorBuffer);
 
         //启用顶点位置数据
-        GLES20.glEnableVertexAttribArray(mVRProgram.maPositionHandle);
+        GLES20.glEnableVertexAttribArray(mBallProgram.maPositionHandle);
         //启用顶点纹理数据
-        GLES20.glEnableVertexAttribArray(mVRProgram.maTexCoorHandle);
+        GLES20.glEnableVertexAttribArray(mBallProgram.maTexCoorHandle);
 
         //绑定纹理
         GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
@@ -514,5 +509,12 @@ public class BaseBall {
 
         //绘制纹理矩形
         GLES20.glDrawArrays(GLES20.GL_TRIANGLES, 0, vCount);
+    }
+
+
+    public void copyM() {
+        for (int i = 0; i < 16; i++) {
+            m[i] = currMatrix[i];
+        }
     }
 }

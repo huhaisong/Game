@@ -15,7 +15,7 @@ public class AABB3 {
     }
 
     //参数为顶点数组的构造器
-    AABB3(float[] vertices) {
+    public AABB3(float[] vertices) {
         min = new Vector3f();
         max = new Vector3f();
         empty();

@@ -1,54 +1,155 @@
-package com.example.a111.game;
+package com.example.a111.game.model;
+
+import android.opengl.GLES20;
+import android.opengl.Matrix;
+
+import com.example.a111.game.util.VectorUtil;
+import com.example.a111.game.view.MySurfaceView;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 import java.util.ArrayList;
 
-import android.opengl.GLES20;
+public class BaseBall {
 
-import com.example.a111.game.util.MatrixState;
+    private float[] mProjMatrix = new float[16];//4x4矩阵 投影用
+    private float[] mVMatrix = new float[16];//摄像机位置朝向9参数矩阵
+    private float[] currMatrix;//当前变换矩阵
+    private float[] mMVPMatrix = new float[16];
+    //保护变换矩阵的栈
+    private static float[][] mStack = new float[10][16];
+    private static int stackTop = -1;
 
-import static com.example.a111.game.util.ShaderUtil.createProgram;
+    public boolean collision = false;
 
-import com.example.a111.game.util.ShaderUtil;
-import com.example.a111.game.util.VectorUtil;
-
-/*
- * 正二十面体
- * 基于三个互相垂直的黄金长方形
- */
-public class Regular20 {
-    int mProgram;//自定义渲染管线着色器程序id
-    int muMVPMatrixHandle;//总变换矩阵引用
-    int maPositionHandle; //顶点位置属性引用
-    int maTexCoorHandle; //顶点纹理坐标属性引用
-    int muMMatrixHandle;
-
-    int maCameraHandle; //摄像机位置属性引用
-    int maNormalHandle; //顶点法向量属性引用
-    int maLightLocationHandle;//光源位置属性引用
-
-    String mVertexShader;//顶点着色器代码脚本
-    String mFragmentShader;//片元着色器代码脚本
+    public BallProgram mBallProgram;
 
     FloatBuffer mVertexBuffer;//顶点坐标数据缓冲
     FloatBuffer mTexCoorBuffer;//顶点纹理坐标数据缓冲
     FloatBuffer mNormalBuffer;//顶点法向量数据缓冲
     int vCount = 0;
-    public float xAngle = 0;//绕x轴旋转的角度
-    public float yAngle = 0;//绕y轴旋转的角度
-    public float zAngle = 0;//绕z轴旋转的角度
-
-
     float bHalf = 0;//黄金长方形的宽
     float r = 0;//球的半径
 
-    public Regular20(MySurfaceView mv, float scale, float aHalf, int n) {
+
+    public void setInitStack()//获取不变换初始矩阵
+    {
+        currMatrix = new float[16];
+        Matrix.setRotateM(currMatrix, 0, 0, 1, 0, 0);
+    }
+
+    //设置透视投影参数
+    public void setProjectFrustum
+    (
+            float left,     //near面的left
+            float right,    //near面的right
+            float bottom,   //near面的bottom
+            float top,      //near面的top
+            float near,     //near面距离
+            float far       //far面距离
+    ) {
+        Matrix.frustumM(mProjMatrix, 0, left, right, bottom, top, near, far);
+    }
+
+    //设置正交投影参数
+    public void setProjectOrtho
+    (
+            float left,        //near面的left
+            float right,    //near面的right
+            float bottom,   //near面的bottom
+            float top,      //near面的top
+            float near,        //near面距离
+            float far       //far面距离
+    ) {
+        Matrix.orthoM(mProjMatrix, 0, left, right, bottom, top, near, far);
+    }
+
+    public void setCamera
+            (
+                    float cx,   //摄像机位置x
+                    float cy,   //摄像机位置y
+                    float cz,   //摄像机位置z
+                    float tx,   //摄像机目标点x
+                    float ty,   //摄像机目标点y
+                    float tz,   //摄像机目标点z
+                    float upx,  //摄像机UP向量X分量
+                    float upy,  //摄像机UP向量Y分量
+                    float upz   //摄像机UP向量Z分量
+            ) {
+        Matrix.setLookAtM(mVMatrix, 0, cx, cy, cz, tx, ty, tz, upx, upy, upz);
+    }
+
+    public void scale(float x, float y, float z) {
+        Matrix.scaleM(currMatrix, 0, x, y, z);
+    }
+
+    public void translate(float x, float y, float z)//设置沿xyz轴移动
+    {
+        Matrix.translateM(currMatrix, 0, x, y, z);
+    }
+
+    public void rotate(float angle, float x, float y, float z)//设置绕xyz轴移动
+    {
+        Matrix.rotateM(currMatrix, 0, angle, x, y, z);
+    }
+
+    public float[] getFinalMatrix() {
+        Matrix.multiplyMM(mMVPMatrix, 0, mVMatrix, 0, currMatrix, 0);
+        Matrix.multiplyMM(mMVPMatrix, 0, mProjMatrix, 0, mMVPMatrix, 0);
+        return mMVPMatrix;
+    }
+
+    public void pushMatrix()//保护变换矩阵
+    {
+        stackTop++;
+        System.arraycopy(currMatrix, 0, mStack[stackTop], 0, 16);
+    }
+
+    public void popMatrix()//恢复变换矩阵
+    {
+        for (int i = 0; i < 16; i++) {
+            currMatrix[i] = mStack[stackTop][i];
+        }
+        stackTop--;
+    }
+
+    public BaseBall(MySurfaceView mv, float scale, float aHalf, int n,long time) {
         //调用初始化顶点数据的initVertexData方法
         initVertexData(scale, aHalf, n);
         //调用初始化着色器的intShader方法
-        initShader(mv);
+        mBallProgram = BallProgram.getInstance();
+        setCamera(0, 0, 8.0f, 0f, 0f, 0f, 0f, 1.0f, 0.0f);
+        setInitStack();
+        scale(0.1f, 0.1f, 0.1f);
+        try {
+            Thread.sleep(time);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        reStartMove();
+    }
+
+    public void reStartMove() {
+        collision = false;
+        setInitStack();
+
+        translate((float) (-50 + Math.random() * 100), (float) (-30 + Math.random() * 60), -150);
+        new Thread() {
+            public void run() {
+                int translateZ = 0;
+                while (translateZ < 140) {
+                    translateZ += 1;
+                    translate(0, 0, 1);
+                    try {
+                        Thread.sleep(30);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+                collision = true;
+            }
+        }.start();
     }
 
     //自定义的初始化顶点数据的方法
@@ -59,8 +160,8 @@ public class Regular20 {
         r = (float) Math.sqrt(aHalf * aHalf + bHalf * bHalf); //半径
         vCount = 3 * 20 * n * n;//顶点个数，共有20个三角形，每个三角形都有三个顶点
         //正20面体坐标数据初始化
-        ArrayList<Float> alVertix20 = new ArrayList<Float>();//正20面体的顶点列表（未卷绕）
-        ArrayList<Integer> alFaceIndex20 = new ArrayList<Integer>();//正20面体组织成面的顶点的索引值列表（按逆时针卷绕）
+        ArrayList<Float> alVertix20 = new ArrayList<>();//正20面体的顶点列表（未卷绕）
+        ArrayList<Integer> alFaceIndex20 = new ArrayList<>();//正20面体组织成面的顶点的索引值列表（按逆时针卷绕）
         //正20面体顶点
         initAlVertix20(alVertix20, aHalf, bHalf);
         //正20面体索引
@@ -69,12 +170,12 @@ public class Regular20 {
         float[] vertices20 = VectorUtil.cullVertex(alVertix20, alFaceIndex20);//只计算顶点
 
         //坐标数据初始化
-        ArrayList<Float> alVertix = new ArrayList<Float>();//原顶点列表（未卷绕）
-        ArrayList<Integer> alFaceIndex = new ArrayList<Integer>();//组织成面的顶点的索引值列表（按逆时针卷绕）
+        ArrayList<Float> alVertix = new ArrayList<>();//原顶点列表（未卷绕）
+        ArrayList<Integer> alFaceIndex = new ArrayList<>();//组织成面的顶点的索引值列表（按逆时针卷绕）
         int vnCount = 0;//前i-1行前所有顶点数的和
         for (int k = 0; k < vertices20.length; k += 9)//对正20面体每个大三角形循环
         {
-            float[] v1 = new float[]{vertices20[k + 0], vertices20[k + 1], vertices20[k + 2]};
+            float[] v1 = new float[]{vertices20[k], vertices20[k + 1], vertices20[k + 2]};
             float[] v2 = new float[]{vertices20[k + 3], vertices20[k + 4], vertices20[k + 5]};
             float[] v3 = new float[]{vertices20[k + 6], vertices20[k + 7], vertices20[k + 8]};
             //顶点
@@ -91,7 +192,7 @@ public class Regular20 {
             //索引
             for (int i = 0; i < n; i++) {
                 if (i == 0) {//若是第0行，直接加入卷绕后顶点索引012
-                    alFaceIndex.add(vnCount + 0);
+                    alFaceIndex.add(vnCount);
                     alFaceIndex.add(vnCount + 1);
                     alFaceIndex.add(vnCount + 2);
                     vnCount += 1;
@@ -136,8 +237,8 @@ public class Regular20 {
 
         //纹理
         //正20面体纹理坐标数据初始化
-        ArrayList<Float> alST20 = new ArrayList<Float>();//正20面体的纹理坐标列表（未卷绕）
-        ArrayList<Integer> alTexIndex20 = new ArrayList<Integer>();//正20面体组织成面的纹理坐标的索引值列表（按逆时针卷绕）
+        ArrayList<Float> alST20 = new ArrayList<>();//正20面体的纹理坐标列表（未卷绕）
+        ArrayList<Integer> alTexIndex20 = new ArrayList<>();//正20面体组织成面的纹理坐标的索引值列表（按逆时针卷绕）
         //正20面体纹理坐标
         float sSpan = 1 / 5.5f;//每个纹理三角形的边长
         float tSpan = 1 / 3.0f;//每个纹理三角形的高
@@ -163,9 +264,9 @@ public class Regular20 {
 
         //计算卷绕纹理坐标
         float[] st20 = VectorUtil.cullTexCoor(alST20, alTexIndex20);//只计算纹理坐标
-        ArrayList<Float> alST = new ArrayList<Float>();//原纹理坐标列表（未卷绕）
+        ArrayList<Float> alST = new ArrayList<>();//原纹理坐标列表（未卷绕）
         for (int k = 0; k < st20.length; k += 6) {
-            float[] st1 = new float[]{st20[k + 0], st20[k + 1], 0};//三角形的纹理坐标
+            float[] st1 = new float[]{st20[k], st20[k + 1], 0};//三角形的纹理坐标
             float[] st2 = new float[]{st20[k + 2], st20[k + 3], 0};
             float[] st3 = new float[]{st20[k + 4], st20[k + 5], 0};
             for (int i = 0; i <= n; i++) {
@@ -381,65 +482,22 @@ public class Regular20 {
 
     }
 
-    //自定义初始化着色器initShader方法
-    public void initShader(MySurfaceView mv) {
-        //加载顶点着色器的脚本内容
-        mVertexShader = ShaderUtil.loadFromAssetsFile("vertex_tex_light.sh", mv.getResources());
-        //加载片元着色器的脚本内容
-        mFragmentShader = ShaderUtil.loadFromAssetsFile("frag_tex_light.sh", mv.getResources());
-        //基于顶点着色器与片元着色器创建程序
-        mProgram = createProgram(mVertexShader, mFragmentShader);
-        //获取程序中顶点位置属性引用id
-        maPositionHandle = GLES20.glGetAttribLocation(mProgram, "aPosition");
-        //获取程序中顶点纹理坐标属性引用id
-        maTexCoorHandle = GLES20.glGetAttribLocation(mProgram, "aTexCoor");
-        //获取程序中总变换矩阵引用id
-        muMVPMatrixHandle = GLES20.glGetUniformLocation(mProgram, "uMVPMatrix");
-
-
-        //获取程序中顶点法向量属性引用id
-        maNormalHandle = GLES20.glGetAttribLocation(mProgram, "aNormal");
-        //获取程序中摄像机位置引用id
-        maCameraHandle = GLES20.glGetUniformLocation(mProgram, "uCamera");
-        //获取程序中光源位置引用id
-        maLightLocationHandle = GLES20.glGetUniformLocation(mProgram, "uLightLocation");
-        //获取位置、旋转变换矩阵引用id
-        muMMatrixHandle = GLES20.glGetUniformLocation(mProgram, "uMMatrix");
-
-
-    }
-
     public void drawSelf(int texId) {
-        MatrixState.rotate(xAngle, 1, 0, 0);
-        MatrixState.rotate(yAngle, 0, 1, 0);
-        MatrixState.rotate(zAngle, 0, 0, 1);
 
         //制定使用某套shader程序
-        GLES20.glUseProgram(mProgram);
-
+        GLES20.glUseProgram(mBallProgram.mProgram);
         //将最终变换矩阵传入shader程序
-        GLES20.glUniformMatrix4fv(muMVPMatrixHandle, 1, false, MatrixState.getFinalMatrix(), 0);
-
-        //将位置、旋转变换矩阵传入shader程序
-        GLES20.glUniformMatrix4fv(muMMatrixHandle, 1, false, MatrixState.getMMatrix(), 0);
-        //将摄像机位置传入shader程序
-        GLES20.glUniform3fv(maCameraHandle, 1, MatrixState.cameraFB);
-        //将光源位置传入shader程序
-        GLES20.glUniform3fv(maLightLocationHandle, 1, MatrixState.lightPositionFB);
+        GLES20.glUniformMatrix4fv(mBallProgram.muMVPMatrixHandle, 1, false, getFinalMatrix(), 0);
 
         //传送顶点位置数据
-        GLES20.glVertexAttribPointer(maPositionHandle, 3, GLES20.GL_FLOAT, false, 3 * 4, mVertexBuffer);
+        GLES20.glVertexAttribPointer(mBallProgram.maPositionHandle, 3, GLES20.GL_FLOAT, false, 3 * 4, mVertexBuffer);
         //传送顶点纹理坐标数据
-        GLES20.glVertexAttribPointer(maTexCoorHandle, 2, GLES20.GL_FLOAT, false, 2 * 4, mTexCoorBuffer);
-        //传送顶点法向量数据
-        GLES20.glVertexAttribPointer(maNormalHandle, 4, GLES20.GL_FLOAT, false, 3 * 4, mNormalBuffer);
+        GLES20.glVertexAttribPointer(mBallProgram.maTexCoorHandle, 2, GLES20.GL_FLOAT, false, 2 * 4, mTexCoorBuffer);
 
         //启用顶点位置数据
-        GLES20.glEnableVertexAttribArray(maPositionHandle);
+        GLES20.glEnableVertexAttribArray(mBallProgram.maPositionHandle);
         //启用顶点纹理数据
-        GLES20.glEnableVertexAttribArray(maTexCoorHandle);
-        //启用顶点法向量数据
-        GLES20.glEnableVertexAttribArray(maNormalHandle);
+        GLES20.glEnableVertexAttribArray(mBallProgram.maTexCoorHandle);
 
         //绑定纹理
         GLES20.glActiveTexture(GLES20.GL_TEXTURE0);

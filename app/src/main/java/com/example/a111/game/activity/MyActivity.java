@@ -1,4 +1,4 @@
-package com.example.a111.game;
+package com.example.a111.game.activity;
 
 import android.app.Activity;
 import android.content.pm.ActivityInfo;
@@ -9,6 +9,9 @@ import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.ImageView;
+
+import com.example.a111.game.view.MySurfaceView;
+import com.example.a111.game.R;
 
 public class MyActivity extends Activity {
     private MySurfaceView mySurfaceView;

@@ -3,9 +3,10 @@ package com.example.pickup.ball;
 import android.opengl.GLES20;
 import android.opengl.Matrix;
 
-import com.example.test.MySurfaceView;
-import com.example.test.TouchableObject;
-import com.example.test.util.AABB3;
+
+import com.example.pickup.MySurfaceView;
+import com.example.pickup.TouchableObject;
+import com.example.pickup.util.AABB3;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
