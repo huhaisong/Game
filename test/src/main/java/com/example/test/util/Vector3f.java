@@ -1,11 +1,11 @@
-package com.example.test;
+package com.example.test.util;
 
 //用于存储点或向量的类
 public class Vector3f
 {
-    float x;
-    float y;
-    float z;
+    public float x;
+    public float y;
+    public float z;
     public Vector3f(){}
     public Vector3f(float x,float y,float z)
     {

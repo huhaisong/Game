@@ -9,7 +9,13 @@ import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 import android.content.Context;
 
-class MySurfaceView extends GLSurfaceView
+import com.example.test.util.AABB3;
+import com.example.test.util.IntersectantUtil;
+import com.example.test.util.LoadUtil;
+import com.example.test.util.MatrixState;
+import com.example.test.util.Vector3f;
+
+public class MySurfaceView extends GLSurfaceView
 {
     private final float TOUCH_SCALE_FACTOR = 180.0f/320;//角度缩放比例
     private SceneRenderer mRenderer;//场景渲染器
@@ -55,7 +61,7 @@ class MySurfaceView extends GLSurfaceView
         switch (e.getAction()) {
             case MotionEvent.ACTION_DOWN:
                 //计算仿射变换后AB两点的位置
-                float[] AB=IntersectantUtil.calculateABPosition
+                float[] AB= IntersectantUtil.calculateABPosition
                         (
                                 x, //触控点X坐标
                                 y, //触控点Y坐标
@@ -209,7 +215,7 @@ class MySurfaceView extends GLSurfaceView
             //初始化变换矩阵
             MatrixState.setInitStack();
             //加载要绘制的物体
-            pm=LoadUtil.loadFromFileVertexOnlyFace("pm.obj", MySurfaceView.this.getResources(),MySurfaceView.this);
+            pm= LoadUtil.loadFromFileVertexOnlyFace("pm.obj", MySurfaceView.this.getResources(),MySurfaceView.this);
 
             ch=LoadUtil.loadFromFileVertexOnlyAverage("ch.obj", MySurfaceView.this.getResources(),MySurfaceView.this);
             cft=LoadUtil.loadFromFileVertexOnlyFace("cft.obj", MySurfaceView.this.getResources(),MySurfaceView.this);

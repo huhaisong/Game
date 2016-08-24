@@ -5,6 +5,10 @@ import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 import android.opengl.GLES20;
 
+import com.example.test.util.AABB3;
+import com.example.test.util.MatrixState;
+import com.example.test.util.ShaderUtil;
+
 //加载后的物体——携带顶点信息，自动计算面法向量
 public class LoadedObjectVertexNormalFace extends TouchableObject
 {
@@ -67,7 +71,7 @@ public class LoadedObjectVertexNormalFace extends TouchableObject
     public void initShader(MySurfaceView mv)
     {
         //加载顶点着色器的脚本内容
-        mVertexShader=ShaderUtil.loadFromAssetsFile("vertex.sh", mv.getResources());
+        mVertexShader= ShaderUtil.loadFromAssetsFile("vertex.sh", mv.getResources());
         //加载片元着色器的脚本内容
         mFragmentShader=ShaderUtil.loadFromAssetsFile("frag.sh", mv.getResources());
         //基于顶点着色器与片元着色器创建程序

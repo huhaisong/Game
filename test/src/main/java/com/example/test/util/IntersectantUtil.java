@@ -1,4 +1,4 @@
-package com.example.test;
+package com.example.test.util;
 
 public class IntersectantUtil {
     /*

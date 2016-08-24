@@ -1,4 +1,4 @@
-package com.example.test;
+package com.example.test.util;
 
 import java.io.BufferedReader;
 import java.io.InputStream;
@@ -8,6 +8,10 @@ import java.util.HashMap;
 import java.util.HashSet;
 import android.content.res.Resources;
 import android.util.Log;
+
+import com.example.test.LoadedObjectVertexNormalAverage;
+import com.example.test.LoadedObjectVertexNormalFace;
+import com.example.test.MySurfaceView;
 
 public class LoadUtil
 {
@@ -31,7 +35,7 @@ public class LoadUtil
     }
 
     //从obj文件中加载携带顶点信息的物体，并自动计算每个顶点的平均法向量
-    public static LoadedObjectVertexNormalAverage loadFromFileVertexOnlyAverage(String fname, Resources r,MySurfaceView mv)
+    public static LoadedObjectVertexNormalAverage loadFromFileVertexOnlyAverage(String fname, Resources r, MySurfaceView mv)
     {
         //加载后物体的引用
         LoadedObjectVertexNormalAverage lo=null;
@@ -175,7 +179,7 @@ public class LoadUtil
     //从obj文件中加载仅携带顶点信息的物体
     //首先加载顶点信息，再根据顶点组成三角形面的情况自动计算出每个面的法向量
     //然后将这个面的法向量分配给这个面上的顶点
-    public static LoadedObjectVertexNormalFace loadFromFileVertexOnlyFace(String fname, Resources r,MySurfaceView mv)
+    public static LoadedObjectVertexNormalFace loadFromFileVertexOnlyFace(String fname, Resources r, MySurfaceView mv)
     {
         //加载后3D对象的引用
         LoadedObjectVertexNormalFace lo=null;

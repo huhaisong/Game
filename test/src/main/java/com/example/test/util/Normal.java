@@ -1,4 +1,4 @@
-package com.example.test;
+package com.example.test.util;
 
 import java.util.Set;
 //表示法向量的类，此类的一个对象表示一个法向量

@@ -1,5 +1,8 @@
 package com.example.test;
 
+import com.example.test.util.AABB3;
+import com.example.test.util.MatrixState;
+
 /*
  * 可以被触控到的抽象类，
  * 物体继承了该类可以被触控到
@@ -28,7 +31,7 @@ public abstract class TouchableObject {
     //复制变换矩阵
     public void copyM(){
         for(int i=0;i<16;i++){
-            m[i]=MatrixState.getMMatrix()[i];
+            m[i]= MatrixState.getMMatrix()[i];
         }
     }
 }
