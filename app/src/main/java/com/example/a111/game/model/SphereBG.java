@@ -8,11 +8,7 @@ import com.example.a111.game.util.ShaderUtil;
 import java.nio.FloatBuffer;
 import java.nio.ShortBuffer;
 
-/**
- * Created by 111 on 2016/8/26.
- */
 public class SphereBG {
-
 
     private String mFragmentShader = "\n" +
             "precision mediump float;\n" +
@@ -37,10 +33,9 @@ public class SphereBG {
     private int mProgram;
     private int mMVPMatrixHandle;
 
-
     int count;
 
-    private FloatBuffer vertexBuffer, textureBuffer, texRighttureBuffer;
+    private FloatBuffer vertexBuffer, textureBuffer;
     private ShortBuffer IndicesBuffer;
 
     public SphereBG() {
@@ -75,7 +70,7 @@ public class SphereBG {
         float angleStep = (float) ((2.0f * Math.PI) / ((float) numSlices));
         float vertices[] = new float[numVertices * 3];
         float texCoords[] = new float[numVertices * 2];
-        float texRightCoords[] = new float[numVertices * 2];
+       // float texRightCoords[] = new float[numVertices * 2];
 
         short indices[] = new short[numIndices];
         for (i = 0; i < numParallels + 1; i++) {
@@ -89,8 +84,8 @@ public class SphereBG {
                 texCoords[texIndex] = 1.0f - (float) j / (float) numSlices;
                 texCoords[texIndex + 1] = ((float) i / (float) numParallels);//((float)i/(float)numParallels);//
 
-                texRightCoords[texIndex] = 1.0f - (float) j / (float) numSlices;
-                texRightCoords[texIndex + 1] = ((float) i / (float) numParallels) / 2 + 0.5f;
+               // texRightCoords[texIndex] = 1.0f - (float) j / (float) numSlices;
+               // texRightCoords[texIndex + 1] = ((float) i / (float) numParallels) / 2 + 0.5f;
             }
         }
 
@@ -106,13 +101,12 @@ public class SphereBG {
             }
         }
 
-        texRighttureBuffer = MemUtil.makeFloatBuffer(texRightCoords);
+        //texRighttureBuffer = MemUtil.makeFloatBuffer(texRightCoords);
         vertexBuffer = MemUtil.makeFloatBuffer(vertices);
         textureBuffer = MemUtil.makeFloatBuffer(texCoords);
         IndicesBuffer = MemUtil.makeShortBuffer(indices);
         return numIndices;
     }
-
 
     public void drawSelf(float[] mvpMatrix, int textureId) {
 
