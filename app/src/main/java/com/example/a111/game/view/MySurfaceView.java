@@ -21,6 +21,7 @@ import android.graphics.BitmapFactory;
 
 import com.example.a111.game.model.BaseBall;
 import com.example.a111.game.R;
+import com.example.a111.game.model.SphereBG;
 import com.example.a111.game.util.AABB3;
 import com.example.a111.game.util.IntersectantUtil;
 import com.example.a111.game.util.Vector3f;
@@ -35,6 +36,7 @@ public class MySurfaceView extends GLSurfaceView {
 
     private SceneRenderer mRenderer;//场景渲染器
     int textureId;      //系统分配的纹理id
+    int bgTextureId;
 
     private int mWidth;
     private int mHeight;
@@ -50,7 +52,7 @@ public class MySurfaceView extends GLSurfaceView {
     //被选中物体的索引值，即id，没有被选中时索引值为-1
     int onFocusId = -1;
     long startTime = 0;
-    long animationtimes = 300;
+    long animationtimes = 400;
 
     public MySurfaceView(Context context) {
         super(context);
@@ -100,6 +102,7 @@ public class MySurfaceView extends GLSurfaceView {
         private BaseBall mBall7;
         private BaseBall mBall8;
         private BaseBall mBall9;
+        private SphereBG mSphereBG;
 
         public void onDrawFrame(GL10 gl) {
             //清除深度缓冲与颜色缓冲
@@ -109,6 +112,7 @@ public class MySurfaceView extends GLSurfaceView {
             mHeadTracker.getLastHeadView(mHeadView, 0);
 
             GLES20.glViewport(0, 0, mWidth / 2, mHeight);
+            mSphereBG.drawSelf(mHeadView, bgTextureId);
             for (BaseBall ball : baseBalls) {
                 ball.setCamera(mHeadView);
                 ball.drawSelf(textureId);
@@ -121,6 +125,7 @@ public class MySurfaceView extends GLSurfaceView {
             }
 
             GLES20.glViewport(mWidth / 2, 0, mWidth / 2, mHeight);
+            mSphereBG.drawSelf(mHeadView, bgTextureId);
             for (BaseBall ball : baseBalls) {
                 ball.setCamera(mHeadView);
                 ball.drawSelf(textureId);
@@ -131,8 +136,6 @@ public class MySurfaceView extends GLSurfaceView {
                     ball.reStartMove();
                 }
             }
-
-
         }
 
         public void onSurfaceChanged(GL10 gl, int width, int height) {
@@ -145,10 +148,10 @@ public class MySurfaceView extends GLSurfaceView {
             top = bottom = 1;
             near = 2;
             far = 500;
-
             for (BaseBall ball : baseBalls) {
                 ball.setProjectFrustum(-left, right, -bottom, top, near, far);
             }
+            mSphereBG.setProjectFrustum(mWidth,mHeight);
         }
 
         public void onSurfaceCreated(GL10 gl, EGLConfig config) {
@@ -160,6 +163,8 @@ public class MySurfaceView extends GLSurfaceView {
             GLES20.glEnable(GLES20.GL_CULL_FACE);
             //加载纹理
             textureId = initTexture(R.drawable.aaa);
+            bgTextureId = initTexture(R.drawable.bg);
+            mSphereBG = new SphereBG();
 
             mBall = new BaseBall(MySurfaceView.this, 2, 1.6f, 15, 0);
             mBall1 = new BaseBall(MySurfaceView.this, 2, 1.6f, 15, 100);
@@ -182,6 +187,8 @@ public class MySurfaceView extends GLSurfaceView {
             baseBalls.add(mBall7);
             baseBalls.add(mBall8);
             baseBalls.add(mBall9);
+
+
         }
     }
 

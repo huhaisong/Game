@@ -1,12 +1,15 @@
 package com.example.a111.game.model;
 
 import android.opengl.GLES20;
+import android.opengl.Matrix;
 
 import com.example.a111.game.util.MemUtil;
 import com.example.a111.game.util.ShaderUtil;
 
 import java.nio.FloatBuffer;
 import java.nio.ShortBuffer;
+
+import static android.opengl.Matrix.perspectiveM;
 
 public class SphereBG {
 
@@ -37,6 +40,9 @@ public class SphereBG {
 
     private FloatBuffer vertexBuffer, textureBuffer;
     private ShortBuffer IndicesBuffer;
+
+    private float[] mProjMatrix = new float[16];//4x4矩阵 投影用
+    private float[] mMVPMatrix = new float[16];
 
     public SphereBG() {
 
@@ -70,7 +76,7 @@ public class SphereBG {
         float angleStep = (float) ((2.0f * Math.PI) / ((float) numSlices));
         float vertices[] = new float[numVertices * 3];
         float texCoords[] = new float[numVertices * 2];
-       // float texRightCoords[] = new float[numVertices * 2];
+        // float texRightCoords[] = new float[numVertices * 2];
 
         short indices[] = new short[numIndices];
         for (i = 0; i < numParallels + 1; i++) {
@@ -84,8 +90,8 @@ public class SphereBG {
                 texCoords[texIndex] = 1.0f - (float) j / (float) numSlices;
                 texCoords[texIndex + 1] = ((float) i / (float) numParallels);//((float)i/(float)numParallels);//
 
-               // texRightCoords[texIndex] = 1.0f - (float) j / (float) numSlices;
-               // texRightCoords[texIndex + 1] = ((float) i / (float) numParallels) / 2 + 0.5f;
+                // texRightCoords[texIndex] = 1.0f - (float) j / (float) numSlices;
+                // texRightCoords[texIndex + 1] = ((float) i / (float) numParallels) / 2 + 0.5f;
             }
         }
 
@@ -108,10 +114,17 @@ public class SphereBG {
         return numIndices;
     }
 
-    public void drawSelf(float[] mvpMatrix, int textureId) {
+    //设置透视投影参数
+    public void setProjectFrustum(int mWidth,int mHeight) {
+        perspectiveM(mProjMatrix, 0, 75.0f, mWidth / mHeight / 2.0f, 0.1f, 400.0f);
+    }
+
+    public void drawSelf(float[] mHeadView, int textureId) {
+
+        Matrix.multiplyMM(mMVPMatrix, 0, mProjMatrix, 0, mHeadView, 0);
 
         GLES20.glUseProgram(mProgram);
-        GLES20.glUniformMatrix4fv(mMVPMatrixHandle, 1, false, mvpMatrix, 0);
+        GLES20.glUniformMatrix4fv(mMVPMatrixHandle, 1, false, mMVPMatrix, 0);
         GLES20.glVertexAttribPointer(maPositionHandle, 3, GLES20.GL_FLOAT, false, 3 * 4, vertexBuffer);
         GLES20.glVertexAttribPointer(maTexCoorHandle, 2, GLES20.GL_FLOAT, false, 2 * 4, textureBuffer);
         GLES20.glEnableVertexAttribArray(maPositionHandle);
