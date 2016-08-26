@@ -1,8 +1,8 @@
 package com.example.a111.game.model;
 
 import android.opengl.GLES20;
-import android.opengl.Matrix;
 
+import com.example.a111.game.util.AABB3;
 import com.example.a111.game.util.VectorUtil;
 import com.example.a111.game.view.MySurfaceView;
 
@@ -11,19 +11,12 @@ import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 import java.util.ArrayList;
 
-public class BaseBall {
-
-    private float[] mProjMatrix = new float[16];//4x4矩阵 投影用
-    private float[] mVMatrix = new float[16];//摄像机位置朝向9参数矩阵
-    private float[] currMatrix;//当前变换矩阵
-    private float[] mMVPMatrix = new float[16];
-    //保护变换矩阵的栈
-    private static float[][] mStack = new float[10][16];
-    private static int stackTop = -1;
+public class BaseBall extends TouchableObject {
 
     public boolean collision = false;
 
-    public BallProgram mBallProgram;
+    private BallProgram mBallProgram;
+    private ReStartMoveThread reStartMoveThread;
 
     FloatBuffer mVertexBuffer;//顶点坐标数据缓冲
     FloatBuffer mTexCoorBuffer;//顶点纹理坐标数据缓冲
@@ -33,123 +26,50 @@ public class BaseBall {
     float r = 0;//球的半径
 
 
-    public void setInitStack()//获取不变换初始矩阵
-    {
-        currMatrix = new float[16];
-        Matrix.setRotateM(currMatrix, 0, 0, 1, 0, 0);
-    }
+    public BaseBall(MySurfaceView mv, float scale, float aHalf, int n, long time) {
 
-    //设置透视投影参数
-    public void setProjectFrustum
-    (
-            float left,     //near面的left
-            float right,    //near面的right
-            float bottom,   //near面的bottom
-            float top,      //near面的top
-            float near,     //near面距离
-            float far       //far面距离
-    ) {
-        Matrix.frustumM(mProjMatrix, 0, left, right, bottom, top, near, far);
-    }
-
-    //设置正交投影参数
-    public void setProjectOrtho
-    (
-            float left,        //near面的left
-            float right,    //near面的right
-            float bottom,   //near面的bottom
-            float top,      //near面的top
-            float near,        //near面距离
-            float far       //far面距离
-    ) {
-        Matrix.orthoM(mProjMatrix, 0, left, right, bottom, top, near, far);
-    }
-
-    public void setCamera
-            (
-                    float cx,   //摄像机位置x
-                    float cy,   //摄像机位置y
-                    float cz,   //摄像机位置z
-                    float tx,   //摄像机目标点x
-                    float ty,   //摄像机目标点y
-                    float tz,   //摄像机目标点z
-                    float upx,  //摄像机UP向量X分量
-                    float upy,  //摄像机UP向量Y分量
-                    float upz   //摄像机UP向量Z分量
-            ) {
-        Matrix.setLookAtM(mVMatrix, 0, cx, cy, cz, tx, ty, tz, upx, upy, upz);
-    }
-
-    public void scale(float x, float y, float z) {
-        Matrix.scaleM(currMatrix, 0, x, y, z);
-    }
-
-    public void translate(float x, float y, float z)//设置沿xyz轴移动
-    {
-        Matrix.translateM(currMatrix, 0, x, y, z);
-    }
-
-    public void rotate(float angle, float x, float y, float z)//设置绕xyz轴移动
-    {
-        Matrix.rotateM(currMatrix, 0, angle, x, y, z);
-    }
-
-    public float[] getFinalMatrix() {
-        Matrix.multiplyMM(mMVPMatrix, 0, mVMatrix, 0, currMatrix, 0);
-        Matrix.multiplyMM(mMVPMatrix, 0, mProjMatrix, 0, mMVPMatrix, 0);
-        return mMVPMatrix;
-    }
-
-    public void pushMatrix()//保护变换矩阵
-    {
-        stackTop++;
-        System.arraycopy(currMatrix, 0, mStack[stackTop], 0, 16);
-    }
-
-    public void popMatrix()//恢复变换矩阵
-    {
-        for (int i = 0; i < 16; i++) {
-            currMatrix[i] = mStack[stackTop][i];
-        }
-        stackTop--;
-    }
-
-    public BaseBall(MySurfaceView mv, float scale, float aHalf, int n,long time) {
         //调用初始化顶点数据的initVertexData方法
         initVertexData(scale, aHalf, n);
         //调用初始化着色器的intShader方法
         mBallProgram = BallProgram.getInstance();
-        setCamera(0, 0, 8.0f, 0f, 0f, 0f, 0f, 1.0f, 0.0f);
+        reStartMoveThread = new ReStartMoveThread();
         setInitStack();
-        scale(0.1f, 0.1f, 0.1f);
-        try {
-            Thread.sleep(time);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+    }
+
+    private class ReStartMoveThread extends Thread {
+
+        public volatile boolean exit = false;
+
+        public void run() {
+            exit = false;
+            int translateZ = 0;
+            while (translateZ < 160) {
+                if (exit) {
+                    break;
+                }
+                translateZ += 1;
+                translate(0, 0, 1);
+                try {
+                    Thread.sleep(16);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+            if (translateZ == 160) {
+                collision = true;
+            }
         }
-        reStartMove();
     }
 
     public void reStartMove() {
+
         collision = false;
         setInitStack();
+        translate((float) (-50 + Math.random() * 100), (float) (-30 + Math.random() * 60), -160);
 
-        translate((float) (-50 + Math.random() * 100), (float) (-30 + Math.random() * 60), -150);
-        new Thread() {
-            public void run() {
-                int translateZ = 0;
-                while (translateZ < 140) {
-                    translateZ += 1;
-                    translate(0, 0, 1);
-                    try {
-                        Thread.sleep(30);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                }
-                collision = true;
-            }
-        }.start();
+        reStartMoveThread.exit = true;
+        reStartMoveThread = new ReStartMoveThread();
+        reStartMoveThread.start();
     }
 
     //自定义的初始化顶点数据的方法
@@ -283,6 +203,7 @@ public class BaseBall {
         //计算卷绕后纹理坐标
         float[] textures = VectorUtil.cullTexCoor(alST, alFaceIndex);
 
+        preBox = new AABB3(vertices);
         //顶点坐标数据初始化
         ByteBuffer vbb = ByteBuffer.allocateDirect(vertices.length * 4);//创建顶点坐标数据缓冲
         vbb.order(ByteOrder.nativeOrder());//设置字节顺序为本地操作系统顺序

@@ -12,7 +12,6 @@ import android.view.MotionEvent;
 import com.example.pickup.ball.BaseBall;
 import com.example.pickup.util.AABB3;
 import com.example.pickup.util.IntersectantUtil;
-import com.example.pickup.util.MatrixState;
 import com.example.pickup.util.Vector3f;
 
 import java.io.IOException;
@@ -36,7 +35,7 @@ public class MySurfaceView extends GLSurfaceView {
     float far;
 
     //可触控物体列表
-    ArrayList<TouchableObject> lovnList = new ArrayList<TouchableObject>();
+    ArrayList<BaseBall> lovnList = new ArrayList<>();
     //被选中物体的索引值，即id，没有被选中时索引值为-1
     int checkedIndex = -1;
 
@@ -65,7 +64,8 @@ public class MySurfaceView extends GLSurfaceView {
                                 left, //视角left、top值
                                 top,
                                 near, //视角near、far值
-                                far
+                                far,
+                                lovnList.get(0).getVMatrix()
                         );
                 //射线AB
                 Vector3f start = new Vector3f(AB[0], AB[1], AB[2]);//起点
@@ -118,9 +118,10 @@ public class MySurfaceView extends GLSurfaceView {
         public void onDrawFrame(GL10 gl) {
             //清除深度缓冲与颜色缓冲
             GLES20.glClear(GLES20.GL_DEPTH_BUFFER_BIT | GLES20.GL_COLOR_BUFFER_BIT);
-
+            ball.pushMatrix();
             ball.scale(ball.size, ball.size, ball.size);
             ball.drawSelf(textureId);
+            ball.popMatrix();
         }
 
         public void onSurfaceChanged(GL10 gl, int width, int height) {
@@ -146,7 +147,9 @@ public class MySurfaceView extends GLSurfaceView {
             GLES20.glEnable(GLES20.GL_DEPTH_TEST);
             //关闭背面剪裁
             GLES20.glDisable(GLES20.GL_CULL_FACE);
-             ball = new BaseBall(MySurfaceView.this, 2, 1.6f, 15, 0);
+            ball = new BaseBall(MySurfaceView.this,2f, 1.6f, 15, 0);
+
+            ball.setCamera(0, 0, 50.0f, 0f, 0f, 0f, 0f, 1.0f, 0.0f);
             lovnList.add(ball);
         }
     }

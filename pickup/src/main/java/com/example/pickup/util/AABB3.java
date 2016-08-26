@@ -4,8 +4,8 @@ import android.opengl.Matrix;
 
 //物体的AABB包围盒
 public class AABB3 {
-    Vector3f min;
-    Vector3f max;
+   public Vector3f min;
+   public Vector3f max;
 
     //空参构造器
     AABB3() {

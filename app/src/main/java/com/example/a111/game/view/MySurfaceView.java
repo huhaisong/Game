@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import android.opengl.GLSurfaceView;
 import android.opengl.GLUtils;
 import android.opengl.GLES20;
+import android.opengl.Matrix;
 import android.os.Handler;
 import android.os.Message;
 import android.util.AttributeSet;
@@ -17,36 +18,120 @@ import javax.microedition.khronos.opengles.GL10;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.view.MotionEvent;
 
+import com.example.a111.game.activity.MyActivity;
 import com.example.a111.game.model.BaseBall;
 import com.example.a111.game.R;
+import com.example.a111.game.util.AABB3;
+import com.example.a111.game.util.IntersectantUtil;
+import com.example.a111.game.util.Vector3f;
+import com.google.vrtoolkit.cardboard.sensors.HeadTracker;
 
 public class MySurfaceView extends GLSurfaceView {
     private Handler mHandler;
 
+    private HeadTracker mHeadTracker;
+    private float[] mHeadView = new float[16];
+
     private SceneRenderer mRenderer;//场景渲染器
     int textureId;      //系统分配的纹理id
 
+    float left;
+    float right;
+    float top;
+    float bottom;
+    float near;
+    float far;
+
+    //可触控物体列表
+    ArrayList<BaseBall> baseBalls = new ArrayList<>();
+    //被选中物体的索引值，即id，没有被选中时索引值为-1
+    int checkedIndex = -1;
+
     public MySurfaceView(Context context) {
         super(context);
-        init();
+        init(context);
     }
 
     public MySurfaceView(Context context, AttributeSet attrs) {
         super(context, attrs);
-        init();
+        init(context);
     }
 
-    private void init() {
+    private void init(Context context) {
         this.setEGLContextClientVersion(2); //设置使用OPENGL ES2.0
         mRenderer = new SceneRenderer();    //创建场景渲染器
         setRenderer(mRenderer);                //设置渲染器
         setRenderMode(GLSurfaceView.RENDERMODE_CONTINUOUSLY);//设置渲染模式为主动渲染
+        Matrix.setIdentityM(mHeadView, 0);
+        mHeadTracker = HeadTracker.createFromContext(context);
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        mHeadTracker.stopTracking();
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        mHeadTracker.startTracking();
     }
 
     public void setHandler(Handler handler) {
 
         this.mHandler = handler;
+    }
+
+    //触摸事件回调方法
+    @Override
+    public boolean onTouchEvent(MotionEvent e) {
+        float y = e.getY();
+        float x = e.getX();
+        switch (e.getAction()) {
+            case MotionEvent.ACTION_DOWN:
+                //计算仿射变换后AB两点的位置
+                float[] AB = IntersectantUtil.calculateABPosition(x, y, MyActivity.screenWidth, MyActivity.screenHeight, left, top, near, far, mHeadView);
+                //射线AB
+                Vector3f start = new Vector3f(AB[0], AB[1], AB[2]);//起点
+                Vector3f end = new Vector3f(AB[3], AB[4], AB[5]);//终点
+                Vector3f dir = end.minus(start);//长度和方向
+            /*
+             * 计算AB线段与每个物体包围盒的最佳交点(与A点最近的交点)，
+			 * 并记录有最佳交点的物体在列表中的索引值
+			 */
+                //记录列表中时间最小的索引值
+                checkedIndex = -1;//标记为没有选中任何物体
+                int tmpIndex = -1;//记录与A点最近物体索引的临时值
+                float minTime = 1;//记录列表中所有物体与AB相交的最短时间
+                for (int i = 0; i < baseBalls.size(); i++) {//遍历列表中的物体
+                    AABB3 box = baseBalls.get(i).getCurrBox(); //获得物体AABB包围盒
+                    float t = box.rayIntersect(start, dir, null);//计算相交时间
+                    if (t <= minTime) {
+                        minTime = t;//记录最小值
+                        tmpIndex = i;//记录最小值索引
+                    }
+                }
+                checkedIndex = tmpIndex;//将索引保存在checkedIndex中
+                changeObj(checkedIndex);//改变被选中物体
+                break;
+        }
+        return true;
+    }
+
+    //改变列表中下标为index的物体
+    public void changeObj(int index) {
+        if (index != -1) {//如果有物体被选中
+            for (int i = 0; i < baseBalls.size(); i++) {
+                if (i == index) {//改变选中的物体
+                    baseBalls.get(i).reStartMove();
+                } else {//恢复其他物体
+                    baseBalls.get(i).changeOnTouch(false);
+                }
+            }
+        }
     }
 
     private class SceneRenderer implements GLSurfaceView.Renderer {
@@ -56,17 +141,21 @@ public class MySurfaceView extends GLSurfaceView {
         private BaseBall mBall2;
         private BaseBall mBall3;
         private BaseBall mBall4;
-        private ArrayList<BaseBall> baseBalls = new ArrayList<>();
+        private BaseBall mBall5;
+        private BaseBall mBall6;
+        private BaseBall mBall7;
+        private BaseBall mBall8;
+        private BaseBall mBall9;
 
         public void onDrawFrame(GL10 gl) {
             //清除深度缓冲与颜色缓冲
             GLES20.glClear(GLES20.GL_DEPTH_BUFFER_BIT | GLES20.GL_COLOR_BUFFER_BIT);
 
+            mHeadTracker.getLastHeadView(mHeadView, 0);
             for (BaseBall ball : baseBalls) {
-                //保护现场
-                ball.pushMatrix();
+
+                ball.setCamera(mHeadView);
                 ball.drawSelf(textureId);
-                ball.popMatrix();
 
                 if (ball.collision) {
                     Message message = new Message();
@@ -77,16 +166,19 @@ public class MySurfaceView extends GLSurfaceView {
             }
         }
 
-
         public void onSurfaceChanged(GL10 gl, int width, int height) {
             //设置视窗大小及位置
             GLES20.glViewport(0, 0, width, height);
             //计算GLSurfaceView的宽高比
             float ratio = (float) width / height;
 
-            //调用此方法计算产生透视投影矩阵
+            left = right = ratio;
+            top = bottom = 1;
+            near = 2;
+            far = 500;
+
             for (BaseBall ball : baseBalls) {
-                ball.setProjectFrustum(-ratio, ratio, -1, 1, 4f, 300);
+                ball.setProjectFrustum(-left, right, -bottom, top, near, far);
             }
         }
 
@@ -100,17 +192,27 @@ public class MySurfaceView extends GLSurfaceView {
             //加载纹理
             textureId = initTexture(R.drawable.aaa);
 
-            mBall = new BaseBall(MySurfaceView.this, 2, 1.6f, 15,0);
-            mBall1 = new BaseBall(MySurfaceView.this, 2, 1.6f, 15,200);
-            mBall2 = new BaseBall(MySurfaceView.this, 2, 1.6f, 15,400);
-            mBall3 = new BaseBall(MySurfaceView.this, 2, 1.6f, 15,600);
-            mBall4 = new BaseBall(MySurfaceView.this, 2, 1.6f, 15,800);
+            mBall = new BaseBall(MySurfaceView.this, 2, 1.6f, 15, 0);
+            mBall1 = new BaseBall(MySurfaceView.this, 2, 1.6f, 15, 100);
+            mBall2 = new BaseBall(MySurfaceView.this, 2, 1.6f, 15, 200);
+            mBall3 = new BaseBall(MySurfaceView.this, 2, 1.6f, 15, 300);
+            mBall4 = new BaseBall(MySurfaceView.this, 2, 1.6f, 15, 400);
+            mBall5 = new BaseBall(MySurfaceView.this, 2, 1.6f, 15, 500);
+            mBall6 = new BaseBall(MySurfaceView.this, 2, 1.6f, 15, 600);
+            mBall7 = new BaseBall(MySurfaceView.this, 2, 1.6f, 15, 700);
+            mBall8 = new BaseBall(MySurfaceView.this, 2, 1.6f, 15, 800);
+            mBall9 = new BaseBall(MySurfaceView.this, 2, 1.6f, 15, 900);
 
             baseBalls.add(mBall);
             baseBalls.add(mBall1);
             baseBalls.add(mBall2);
             baseBalls.add(mBall3);
             baseBalls.add(mBall4);
+            baseBalls.add(mBall5);
+            baseBalls.add(mBall6);
+            baseBalls.add(mBall7);
+            baseBalls.add(mBall8);
+            baseBalls.add(mBall9);
         }
     }
 

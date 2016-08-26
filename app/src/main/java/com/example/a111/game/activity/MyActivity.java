@@ -5,6 +5,7 @@ import android.content.pm.ActivityInfo;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.util.DisplayMetrics;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
@@ -14,8 +15,13 @@ import com.example.a111.game.view.MySurfaceView;
 import com.example.a111.game.R;
 
 public class MyActivity extends Activity {
+
     private MySurfaceView mySurfaceView;
     private ImageView myImageView;
+
+    public static float screenWidth;//屏幕宽度
+    public static float screenHeight;//屏幕高度
+
     Handler mHandler = new Handler() {
         @Override
         public void handleMessage(Message msg) {
@@ -58,6 +64,10 @@ public class MyActivity extends Activity {
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
         //设置为横屏模式
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
+        DisplayMetrics dm = new DisplayMetrics();
+        getWindowManager().getDefaultDisplay().getMetrics(dm);
+        screenWidth = dm.widthPixels;            //dm.widthPixels    获取屏幕横向分辨率
+        screenHeight = dm.heightPixels;        //dm.heightPixels	获取屏幕竖向分辨率
         //切换到主界面
         setContentView(R.layout.main);
         mySurfaceView = (MySurfaceView) findViewById(R.id.myView);
