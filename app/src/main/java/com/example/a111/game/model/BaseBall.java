@@ -28,12 +28,10 @@ public class BaseBall extends TouchableObject {
 
     public BaseBall(MySurfaceView mv, float scale, float aHalf, int n, long time) {
 
-        //调用初始化顶点数据的initVertexData方法
+        setInitStack();
         initVertexData(scale, aHalf, n);
-        //调用初始化着色器的intShader方法
         mBallProgram = BallProgram.getInstance();
         reStartMoveThread = new ReStartMoveThread();
-        setInitStack();
     }
 
     private class ReStartMoveThread extends Thread {
@@ -50,7 +48,7 @@ public class BaseBall extends TouchableObject {
                 translateZ += 1;
                 translate(0, 0, 1);
                 try {
-                    Thread.sleep(16);
+                    Thread.sleep(100);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }

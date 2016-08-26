@@ -18,9 +18,7 @@ import javax.microedition.khronos.opengles.GL10;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.view.MotionEvent;
 
-import com.example.a111.game.activity.MyActivity;
 import com.example.a111.game.model.BaseBall;
 import com.example.a111.game.R;
 import com.example.a111.game.util.AABB3;
@@ -29,6 +27,7 @@ import com.example.a111.game.util.Vector3f;
 import com.google.vrtoolkit.cardboard.sensors.HeadTracker;
 
 public class MySurfaceView extends GLSurfaceView {
+
     private Handler mHandler;
 
     private HeadTracker mHeadTracker;
@@ -37,6 +36,8 @@ public class MySurfaceView extends GLSurfaceView {
     private SceneRenderer mRenderer;//场景渲染器
     int textureId;      //系统分配的纹理id
 
+    private int mWidth;
+    private int mHeight;
     float left;
     float right;
     float top;
@@ -47,7 +48,9 @@ public class MySurfaceView extends GLSurfaceView {
     //可触控物体列表
     ArrayList<BaseBall> baseBalls = new ArrayList<>();
     //被选中物体的索引值，即id，没有被选中时索引值为-1
-    int checkedIndex = -1;
+    int onFocusId = -1;
+    long startTime = 0;
+    long animationtimes = 300;
 
     public MySurfaceView(Context context) {
         super(context);
@@ -85,55 +88,6 @@ public class MySurfaceView extends GLSurfaceView {
         this.mHandler = handler;
     }
 
-    //触摸事件回调方法
-    @Override
-    public boolean onTouchEvent(MotionEvent e) {
-        float y = e.getY();
-        float x = e.getX();
-        switch (e.getAction()) {
-            case MotionEvent.ACTION_DOWN:
-                //计算仿射变换后AB两点的位置
-                float[] AB = IntersectantUtil.calculateABPosition(x, y, MyActivity.screenWidth, MyActivity.screenHeight, left, top, near, far, mHeadView);
-                //射线AB
-                Vector3f start = new Vector3f(AB[0], AB[1], AB[2]);//起点
-                Vector3f end = new Vector3f(AB[3], AB[4], AB[5]);//终点
-                Vector3f dir = end.minus(start);//长度和方向
-            /*
-             * 计算AB线段与每个物体包围盒的最佳交点(与A点最近的交点)，
-			 * 并记录有最佳交点的物体在列表中的索引值
-			 */
-                //记录列表中时间最小的索引值
-                checkedIndex = -1;//标记为没有选中任何物体
-                int tmpIndex = -1;//记录与A点最近物体索引的临时值
-                float minTime = 1;//记录列表中所有物体与AB相交的最短时间
-                for (int i = 0; i < baseBalls.size(); i++) {//遍历列表中的物体
-                    AABB3 box = baseBalls.get(i).getCurrBox(); //获得物体AABB包围盒
-                    float t = box.rayIntersect(start, dir, null);//计算相交时间
-                    if (t <= minTime) {
-                        minTime = t;//记录最小值
-                        tmpIndex = i;//记录最小值索引
-                    }
-                }
-                checkedIndex = tmpIndex;//将索引保存在checkedIndex中
-                changeObj(checkedIndex);//改变被选中物体
-                break;
-        }
-        return true;
-    }
-
-    //改变列表中下标为index的物体
-    public void changeObj(int index) {
-        if (index != -1) {//如果有物体被选中
-            for (int i = 0; i < baseBalls.size(); i++) {
-                if (i == index) {//改变选中的物体
-                    baseBalls.get(i).reStartMove();
-                } else {//恢复其他物体
-                    baseBalls.get(i).changeOnTouch(false);
-                }
-            }
-        }
-    }
-
     private class SceneRenderer implements GLSurfaceView.Renderer {
 
         private BaseBall mBall;
@@ -150,13 +104,14 @@ public class MySurfaceView extends GLSurfaceView {
         public void onDrawFrame(GL10 gl) {
             //清除深度缓冲与颜色缓冲
             GLES20.glClear(GLES20.GL_DEPTH_BUFFER_BIT | GLES20.GL_COLOR_BUFFER_BIT);
-
+            getOnFocusId();
+            changeObj();
             mHeadTracker.getLastHeadView(mHeadView, 0);
-            for (BaseBall ball : baseBalls) {
 
+            GLES20.glViewport(0, 0, mWidth / 2, mHeight);
+            for (BaseBall ball : baseBalls) {
                 ball.setCamera(mHeadView);
                 ball.drawSelf(textureId);
-
                 if (ball.collision) {
                     Message message = new Message();
                     message.what = 1111;
@@ -164,13 +119,27 @@ public class MySurfaceView extends GLSurfaceView {
                     ball.reStartMove();
                 }
             }
+
+            GLES20.glViewport(mWidth / 2, 0, mWidth / 2, mHeight);
+            for (BaseBall ball : baseBalls) {
+                ball.setCamera(mHeadView);
+                ball.drawSelf(textureId);
+                if (ball.collision) {
+                    Message message = new Message();
+                    message.what = 1111;
+                    mHandler.sendMessage(message);
+                    ball.reStartMove();
+                }
+            }
+
+
         }
 
         public void onSurfaceChanged(GL10 gl, int width, int height) {
-            //设置视窗大小及位置
-            GLES20.glViewport(0, 0, width, height);
+            mWidth = width;
+            mHeight = height;
             //计算GLSurfaceView的宽高比
-            float ratio = (float) width / height;
+            float ratio = (float) width / height / 2;
 
             left = right = ratio;
             top = bottom = 1;
@@ -213,6 +182,53 @@ public class MySurfaceView extends GLSurfaceView {
             baseBalls.add(mBall7);
             baseBalls.add(mBall8);
             baseBalls.add(mBall9);
+        }
+    }
+
+    public void getOnFocusId() {
+
+        float[] AB = IntersectantUtil.calculateABPosition(mWidth / 2, mHeight / 2,
+                mWidth, mHeight, left, top, near, far, mHeadView);
+        //射线AB
+        Vector3f start = new Vector3f(AB[0], AB[1], AB[2]);//起点
+        Vector3f end = new Vector3f(AB[3], AB[4], AB[5]);//终点
+        Vector3f dir = end.minus(start);//长度和方向
+            /*
+             * 计算AB线段与每个物体包围盒的最佳交点(与A点最近的交点)，
+			 * 并记录有最佳交点的物体在列表中的索引值
+			 */
+        //记录列表中时间最小的索引值
+        int tmpIndex = -1;//记录与A点最近物体索引的临时值
+        float minTime = 1;//记录列表中所有物体与AB相交的最短时间
+        for (int i = 0; i < baseBalls.size(); i++) {//遍历列表中的物体
+            AABB3 box = baseBalls.get(i).getCurrBox(); //获得物体AABB包围盒
+            float t = box.rayIntersect(start, dir, null);//计算相交时间
+            if (t <= minTime) {
+                minTime = t;//记录最小值
+                tmpIndex = i;//记录最小值索引
+            }
+        }
+        if (tmpIndex != -1) {
+            if (onFocusId == tmpIndex) {
+
+            } else {
+                onFocusId = tmpIndex;
+                startTime = System.currentTimeMillis();
+            }
+        } else {
+            startTime = System.currentTimeMillis();
+        }
+    }
+
+    //改变列表中下标为index的物体
+    public void changeObj() {
+        long t = System.currentTimeMillis() - startTime;
+        if (t > animationtimes) {
+            for (int i = 0; i < baseBalls.size(); i++) {
+                if (i == onFocusId) {//改变选中的物体
+                    baseBalls.get(i).reStartMove();
+                }
+            }
         }
     }
 
