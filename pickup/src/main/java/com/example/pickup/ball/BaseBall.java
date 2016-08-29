@@ -397,16 +397,21 @@ public class BaseBall extends TouchableObject {
         GLES20.glUseProgram(mBallProgram.mProgram);
         //将最终变换矩阵传入shader程序
         GLES20.glUniformMatrix4fv(mBallProgram.muMVPMatrixHandle, 1, false, getFinalMatrix(), 0);
+        //将位置、旋转变换矩阵传入shader程序
+        GLES20.glUniformMatrix4fv(mBallProgram.muMMatrixHandle, 1, false, currMatrix, 0);
 
         //传送顶点位置数据
         GLES20.glVertexAttribPointer(mBallProgram.maPositionHandle, 3, GLES20.GL_FLOAT, false, 3 * 4, mVertexBuffer);
         //传送顶点纹理坐标数据
         GLES20.glVertexAttribPointer(mBallProgram.maTexCoorHandle, 2, GLES20.GL_FLOAT, false, 2 * 4, mTexCoorBuffer);
-
+        //传送顶点法向量数据
+        GLES20.glVertexAttribPointer(mBallProgram.maNormalHandle, 4, GLES20.GL_FLOAT, false, 3 * 4, mNormalBuffer);
         //启用顶点位置数据
         GLES20.glEnableVertexAttribArray(mBallProgram.maPositionHandle);
         //启用顶点纹理数据
         GLES20.glEnableVertexAttribArray(mBallProgram.maTexCoorHandle);
+        //启用顶点法向量数据
+        GLES20.glEnableVertexAttribArray(mBallProgram.maNormalHandle);
 
         //绑定纹理
         GLES20.glActiveTexture(GLES20.GL_TEXTURE0);

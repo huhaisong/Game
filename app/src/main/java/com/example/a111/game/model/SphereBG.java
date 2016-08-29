@@ -116,7 +116,7 @@ public class SphereBG {
 
     //设置透视投影参数
     public void setProjectFrustum(int mWidth,int mHeight) {
-        perspectiveM(mProjMatrix, 0, 75.0f, mWidth / mHeight / 2.0f, 0.1f, 400.0f);
+        perspectiveM(mProjMatrix, 0, 75.0f, mWidth / mHeight / 2.0f, 0.1f, 500.0f);
     }
 
     public void drawSelf(float[] mHeadView, int textureId) {

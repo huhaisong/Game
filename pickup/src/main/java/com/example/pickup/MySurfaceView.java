@@ -24,7 +24,6 @@ import javax.microedition.khronos.opengles.GL10;
 public class MySurfaceView extends GLSurfaceView {
 
     int textureId;      //系统分配的纹理id
-    private final float TOUCH_SCALE_FACTOR = 180.0f / 320;//角度缩放比例
     private SceneRenderer mRenderer;//场景渲染器
 
     float left;

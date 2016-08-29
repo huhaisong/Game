@@ -511,7 +511,6 @@ public class BaseBall extends TouchableObject {
         GLES20.glDrawArrays(GLES20.GL_TRIANGLES, 0, vCount);
     }
 
-
     public void copyM() {
         for (int i = 0; i < 16; i++) {
             m[i] = currMatrix[i];

@@ -17,10 +17,7 @@ import com.example.a111.game.R;
 public class MyActivity extends Activity {
 
     private MySurfaceView mySurfaceView;
-    private ImageView myImageView;
-
-    public static float screenWidth;//屏幕宽度
-    public static float screenHeight;//屏幕高度
+    private ImageView myImageView0,myImageView1;
 
     Handler mHandler = new Handler() {
         @Override
@@ -34,7 +31,8 @@ public class MyActivity extends Activity {
 
     private void showImage() {
 
-        myImageView.setVisibility(View.VISIBLE);
+        myImageView0.setVisibility(View.VISIBLE);
+        myImageView1.setVisibility(View.VISIBLE);
         new Thread(new Runnable() {
             @Override
             public void run() {
@@ -48,7 +46,8 @@ public class MyActivity extends Activity {
                 handler.post(new Runnable() {
                     @Override
                     public void run() {
-                        myImageView.setVisibility(View.GONE);
+                        myImageView0.setVisibility(View.GONE);
+                        myImageView1.setVisibility(View.GONE);
                     }
                 });
 
@@ -64,15 +63,11 @@ public class MyActivity extends Activity {
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
         //设置为横屏模式
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
-        DisplayMetrics dm = new DisplayMetrics();
-        getWindowManager().getDefaultDisplay().getMetrics(dm);
-        screenWidth = dm.widthPixels;            //dm.widthPixels    获取屏幕横向分辨率
-        screenHeight = dm.heightPixels;        //dm.heightPixels	获取屏幕竖向分辨率
         //切换到主界面
         setContentView(R.layout.main);
         mySurfaceView = (MySurfaceView) findViewById(R.id.myView);
-        myImageView = (ImageView) findViewById(R.id.imageView);
-
+        myImageView0 = (ImageView) findViewById(R.id.imageView0);
+        myImageView1 = (ImageView) findViewById(R.id.imageView1);
         mySurfaceView.setHandler(mHandler);
     }
 
@@ -87,6 +82,4 @@ public class MyActivity extends Activity {
         super.onPause();
         mySurfaceView.onPause();
     }
-
-
 }

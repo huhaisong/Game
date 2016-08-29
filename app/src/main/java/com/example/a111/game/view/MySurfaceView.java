@@ -105,8 +105,9 @@ public class MySurfaceView extends GLSurfaceView {
         private SphereBG mSphereBG;
 
         public void onDrawFrame(GL10 gl) {
-            //清除深度缓冲与颜色缓冲
+
             GLES20.glClear(GLES20.GL_DEPTH_BUFFER_BIT | GLES20.GL_COLOR_BUFFER_BIT);
+
             getOnFocusId();
             changeObj();
             mHeadTracker.getLastHeadView(mHeadView, 0);
@@ -155,12 +156,9 @@ public class MySurfaceView extends GLSurfaceView {
         }
 
         public void onSurfaceCreated(GL10 gl, EGLConfig config) {
-            //设置屏幕背景色RGBA
             GLES20.glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-            //启用深度测试
             GLES20.glEnable(GLES20.GL_DEPTH_TEST);
-            //设置为打开背面剪裁
-            GLES20.glEnable(GLES20.GL_CULL_FACE);
+            GLES20.glDisable(GLES20.GL_CULL_FACE);
             //加载纹理
             textureId = initTexture(R.drawable.aaa);
             bgTextureId = initTexture(R.drawable.bg);
@@ -187,8 +185,6 @@ public class MySurfaceView extends GLSurfaceView {
             baseBalls.add(mBall7);
             baseBalls.add(mBall8);
             baseBalls.add(mBall9);
-
-
         }
     }
 

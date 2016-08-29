@@ -168,8 +168,10 @@ public class MySurfaceView extends GLSurfaceView {
             MatrixState.setCamera(cx, cy, cz, tx, ty, tz, 0, 1, 0);
             //初始化光源位置
             MatrixState.setLightLocation(100, 100, 100);
+            MatrixState.pushMatrix();
             ball.scale(ball.size, ball.size, ball.size);
             ball.drawSelf(textureId);
+            MatrixState.popMatrix();
             //绘制物体
             pm.drawSelf();//平面
             //绘制长方体
