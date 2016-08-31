@@ -1,6 +1,7 @@
 package com.example.menu.view;
 
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.opengl.GLES20;
@@ -12,6 +13,8 @@ import android.util.AttributeSet;
 import android.util.Log;
 
 import com.example.menu.R;
+import com.example.menu.activity.GameActivity;
+import com.example.menu.activity.MenuActivity;
 import com.example.menu.model.BaseSector;
 import com.example.menu.util.IntersectantUtil;
 
@@ -29,6 +32,7 @@ public class MenuGLSurfaceView extends BaseGLSurfaceView {
 
     private Handler mHandler;
     private MyRenderer mRenderer;//场景渲染器
+    private Context mContext;
 
     private int mWidth;
     private int mHeight;
@@ -53,7 +57,7 @@ public class MenuGLSurfaceView extends BaseGLSurfaceView {
     }
 
     private void init(Context context) {
-
+this.mContext = context;
         mRenderer = new MyRenderer();    //创建场景渲染器
         setRenderer(mRenderer);                //设置渲染器
         setRenderMode(GLSurfaceView.RENDERMODE_CONTINUOUSLY);//设置渲染模式为主动渲染
@@ -160,7 +164,8 @@ public class MenuGLSurfaceView extends BaseGLSurfaceView {
             if (t > 500) {
                 switch (onPickupId) {
                     case 1:
-                        Log.i("aaa", "onPicked: one is picked up!");
+                        Intent intent = new Intent(mContext, GameActivity.class);
+                        mContext.startActivity(intent);
                         break;
                     case 2:
                         Log.i("aaa", "onPicked: two is picked up!");

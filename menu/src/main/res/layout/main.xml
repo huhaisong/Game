@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/main_liner"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:orientation="vertical">
+
+
+    <com.example.menu.view.GameSurfaceView
+        android:id="@+id/myView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:orientation="horizontal">
+
+            <ImageView
+                android:layout_width="16dp"
+                android:layout_height="16dp"
+                android:layout_gravity="center"
+                android:layout_weight="1"
+                android:src="@drawable/spot" />
+
+            <ImageView
+                android:layout_width="16dp"
+                android:layout_height="16dp"
+                android:layout_gravity="center"
+                android:layout_weight="1"
+                android:src="@drawable/spot" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:orientation="horizontal">
+
+            <ImageView
+                android:layout_weight="1"
+                android:visibility="gone"
+                android:id="@+id/imageView0"
+                android:scaleType="fitXY"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:src="@drawable/bantouming"/>
+            <ImageView
+                android:layout_weight="1"
+                android:id="@+id/imageView1"
+                android:scaleType="fitXY"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:src="@drawable/bantouming"
+                android:visibility="gone" />
+
+        </LinearLayout>
+    </RelativeLayout>
+</FrameLayout>
