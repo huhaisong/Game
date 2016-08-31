@@ -29,7 +29,6 @@ public class MenuGLSurfaceView extends BaseGLSurfaceView {
 
     private Handler mHandler;
     private MyRenderer mRenderer;//场景渲染器
-    int textureId;      //系统分配的纹理id
 
     private int mWidth;
     private int mHeight;
@@ -67,18 +66,28 @@ public class MenuGLSurfaceView extends BaseGLSurfaceView {
     BaseSector mSelectLevelMenu;
     BaseSector mSetMenu;
     BaseSector mTeamInformationMenu;
+    int textureId;
+    int mStartTextureId;
+    int mSelectLevelTextureId;
+    int mSetTextureId;
+    int mTeamInformationTextureId;
+
     long startTime;
 
     class MyRenderer implements Renderer {
 
         @Override
         public void onSurfaceCreated(GL10 gl, EGLConfig config) {
-            GLES20.glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+            GLES20.glClearColor(0.0f, 1.0f, 0.0f, 1.0f);
             GLES20.glEnable(GLES20.GL_DEPTH_TEST);
             GLES20.glDisable(GLES20.GL_CULL_FACE);
-            textureId = initTexture(R.drawable.aa);
+            textureId = initTexture();
+            mStartTextureId = initTexture(R.drawable.aa, "开始游戏");
+            mSelectLevelTextureId = initTexture(R.drawable.aa, "选择关卡");
+            mSetTextureId = initTexture(R.drawable.aa, "设置选项");
+            mTeamInformationTextureId = initTexture(R.drawable.aa, "制作团队");
 
-            mBaseSector = new BaseSector(1950, 800, 100, 40, 10, 1, 3.6f, 0);
+            mBaseSector = new BaseSector(1940, 880, 120, 220, 10, 1, 3.6f, 0);
             mStartMenu = new BaseSector(1950, 900, 100, 40, 10, 1, 3.0f, 1);
             mSelectLevelMenu = new BaseSector(1950, 945, 100, 40, 10, 1, 3.0f, 2);
             mSetMenu = new BaseSector(1950, 990, 100, 40, 10, 1, 3.0f, 3);
@@ -115,13 +124,13 @@ public class MenuGLSurfaceView extends BaseGLSurfaceView {
             for (BaseSector menu : mMenus) {
                 menu.setCamera(mHeadView);
             }
-           // mBaseSector.draw(textureId);
-            for (BaseSector menu : mMenus) {
-                menu.draw(textureId);
-            }
+
+            mBaseSector.draw(textureId);
+            mStartMenu.draw(mStartTextureId);
+            mSelectLevelMenu.draw(mSelectLevelTextureId);
+            mSetMenu.draw(mSetTextureId);
+            mTeamInformationMenu.draw(mTeamInformationTextureId);
         }
-
-
 
 
         private void onPicked() {

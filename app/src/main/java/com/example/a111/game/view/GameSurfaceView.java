@@ -80,7 +80,7 @@ public class GameSurfaceView extends BaseGLSurfaceView {
         private SphereBG mSphereBG;
 
         public void onSurfaceCreated(GL10 gl, EGLConfig config) {
-            GLES20.glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+            GLES20.glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
             GLES20.glEnable(GLES20.GL_DEPTH_TEST);
             GLES20.glDisable(GLES20.GL_CULL_FACE);
             //加载纹理

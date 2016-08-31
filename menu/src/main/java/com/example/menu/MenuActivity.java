@@ -19,8 +19,9 @@ public class MenuActivity extends Activity {
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
         //设置为横屏模式
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
-        mSurfaceView = new MenuGLSurfaceView(this);
-        setContentView(mSurfaceView);
+
+        setContentView(R.layout.activity_main);
+        mSurfaceView = (MenuGLSurfaceView) findViewById(R.id.menuView);
     }
 
 
