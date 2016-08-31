@@ -1,10 +1,10 @@
-package com.example.a111.game.model;
+package com.example.menu.model;
 
 
 import android.opengl.Matrix;
 
-import com.example.a111.game.util.AABB3;
-import com.example.a111.game.util.Vector3f;
+import com.example.menu.util.AABB3;
+import com.example.menu.util.Vector3f;
 
 /*
  * 可以被触控到的抽象类，

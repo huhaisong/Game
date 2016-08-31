@@ -5,18 +5,17 @@ import android.content.pm.ActivityInfo;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
-import android.util.DisplayMetrics;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.ImageView;
 
-import com.example.a111.game.view.MySurfaceView;
+import com.example.a111.game.view.GameSurfaceView;
 import com.example.a111.game.R;
 
-public class MyActivity extends Activity {
+public class GameActivity extends Activity {
 
-    private MySurfaceView mySurfaceView;
+    private GameSurfaceView gameSurfaceView;
     private ImageView myImageView0,myImageView1;
 
     Handler mHandler = new Handler() {
@@ -65,21 +64,21 @@ public class MyActivity extends Activity {
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
         //切换到主界面
         setContentView(R.layout.main);
-        mySurfaceView = (MySurfaceView) findViewById(R.id.myView);
+        gameSurfaceView = (GameSurfaceView) findViewById(R.id.myView);
         myImageView0 = (ImageView) findViewById(R.id.imageView0);
         myImageView1 = (ImageView) findViewById(R.id.imageView1);
-        mySurfaceView.setHandler(mHandler);
+        gameSurfaceView.setHandler(mHandler);
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        mySurfaceView.onResume();
+        gameSurfaceView.onResume();
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-        mySurfaceView.onPause();
+        gameSurfaceView.onPause();
     }
 }

@@ -4,7 +4,7 @@ import android.opengl.GLES20;
 
 import com.example.a111.game.util.AABB3;
 import com.example.a111.game.util.VectorUtil;
-import com.example.a111.game.view.MySurfaceView;
+import com.example.a111.game.view.GameSurfaceView;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -14,19 +14,12 @@ import java.util.ArrayList;
 public class BaseBall extends TouchableObject {
 
     public boolean collision = false;
-
     private BallProgram mBallProgram;
     private ReStartMoveThread reStartMoveThread;
 
-    FloatBuffer mVertexBuffer;//顶点坐标数据缓冲
-    FloatBuffer mTexCoorBuffer;//顶点纹理坐标数据缓冲
-    FloatBuffer mNormalBuffer;//顶点法向量数据缓冲
-    int vCount = 0;
-    float bHalf = 0;//黄金长方形的宽
-    float r = 0;//球的半径
+    public BaseBall(GameSurfaceView mv, float scale, float aHalf, int n, long time, int id) {
 
-    public BaseBall(MySurfaceView mv, float scale, float aHalf, int n, long time) {
-
+        this.id = id;
         setInitStack();
         initVertexData(scale, aHalf, n);
         mBallProgram = BallProgram.getInstance();
@@ -69,6 +62,13 @@ public class BaseBall extends TouchableObject {
         reStartMoveThread = new ReStartMoveThread();
         reStartMoveThread.start();
     }
+
+    FloatBuffer mVertexBuffer;//顶点坐标数据缓冲
+    FloatBuffer mTexCoorBuffer;//顶点纹理坐标数据缓冲
+    FloatBuffer mNormalBuffer;//顶点法向量数据缓冲
+    int vCount = 0;
+    float bHalf = 0;//黄金长方形的宽
+    float r = 0;//球的半径
 
     //自定义的初始化顶点数据的方法
     public void initVertexData(float scale, float aHalf, int n) //大小，黄金长方形长边的一半，分段数
@@ -431,4 +431,7 @@ public class BaseBall extends TouchableObject {
         //绘制纹理矩形
         GLES20.glDrawArrays(GLES20.GL_TRIANGLES, 0, vCount);
     }
+
+
+
 }
