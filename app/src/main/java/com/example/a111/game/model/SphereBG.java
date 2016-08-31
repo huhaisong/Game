@@ -118,6 +118,10 @@ public class SphereBG {
     public void setProjectFrustum(int mWidth,int mHeight) {
         perspectiveM(mProjMatrix, 0, 75.0f, mWidth / mHeight / 2.0f, 0.1f, 500.0f);
     }
+    //设置透视投影参数
+    public void setProjectFrustum(float left, float right, float bottom, float top, float near, float far) {
+        Matrix.frustumM(mProjMatrix, 0, left, right, bottom, top, near, far);
+    }
 
     public void drawSelf(float[] mHeadView, int textureId) {
 

@@ -123,7 +123,7 @@ public class GameSurfaceView extends BaseGLSurfaceView {
             for (BaseBall ball : mBaseBalls) {
                 ball.setProjectFrustum(-left, right, -bottom, top, near, far);
             }
-            mSphereBG.setProjectFrustum(mWidth, mHeight);
+            mSphereBG.setProjectFrustum(-left, right, -bottom, top, near, far);
         }
 
         public void onDrawFrame(GL10 gl) {
@@ -136,9 +136,11 @@ public class GameSurfaceView extends BaseGLSurfaceView {
 
             GLES20.glViewport(0, 0, mWidth / 2, mHeight);
             mSphereBG.drawSelf(mHeadView, bgTextureId);
+
             for (BaseBall ball : mBaseBalls) {
                 ball.setCamera(mHeadView);
                 ball.drawSelf(textureId);
+
                 if (ball.collision) {
                     Message message = new Message();
                     message.what = 1111;

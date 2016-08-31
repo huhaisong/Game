@@ -16,6 +16,7 @@ import com.example.menu.R;
 import com.example.menu.activity.GameActivity;
 import com.example.menu.activity.MenuActivity;
 import com.example.menu.model.BaseSector;
+import com.example.menu.model.SphereBG;
 import com.example.menu.util.IntersectantUtil;
 
 import java.io.IOException;
@@ -57,7 +58,7 @@ public class MenuGLSurfaceView extends BaseGLSurfaceView {
     }
 
     private void init(Context context) {
-this.mContext = context;
+        this.mContext = context;
         mRenderer = new MyRenderer();    //创建场景渲染器
         setRenderer(mRenderer);                //设置渲染器
         setRenderMode(GLSurfaceView.RENDERMODE_CONTINUOUSLY);//设置渲染模式为主动渲染
@@ -70,7 +71,9 @@ this.mContext = context;
     BaseSector mSelectLevelMenu;
     BaseSector mSetMenu;
     BaseSector mTeamInformationMenu;
+    private SphereBG mSphereBG;
     int textureId;
+    int mSphereBGTextureID;
     int mStartTextureId;
     int mSelectLevelTextureId;
     int mSetTextureId;
@@ -82,15 +85,17 @@ this.mContext = context;
 
         @Override
         public void onSurfaceCreated(GL10 gl, EGLConfig config) {
-            GLES20.glClearColor(0.0f, 1.0f, 0.0f, 1.0f);
+            GLES20.glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
             GLES20.glEnable(GLES20.GL_DEPTH_TEST);
             GLES20.glDisable(GLES20.GL_CULL_FACE);
             textureId = initTexture();
+            mSphereBGTextureID = initTexture(R.drawable.bg);
             mStartTextureId = initTexture(R.drawable.aa, "开始游戏");
             mSelectLevelTextureId = initTexture(R.drawable.aa, "选择关卡");
             mSetTextureId = initTexture(R.drawable.aa, "设置选项");
             mTeamInformationTextureId = initTexture(R.drawable.aa, "制作团队");
 
+            mSphereBG = new SphereBG();
             mBaseSector = new BaseSector(1940, 880, 120, 220, 10, 1, 3.6f, 0);
             mStartMenu = new BaseSector(1950, 900, 100, 40, 10, 1, 3.0f, 1);
             mSelectLevelMenu = new BaseSector(1950, 945, 100, 40, 10, 1, 3.0f, 2);
@@ -116,6 +121,7 @@ this.mContext = context;
                 menu.setProjectFrustum(-left, right, -bottom, top, near, far);
             }
             mBaseSector.setProjectFrustum(-left, right, -bottom, top, near, far);
+            mSphereBG.setProjectFrustum(-left, right, -bottom, top, near, far);
         }
 
         @Override
@@ -125,6 +131,7 @@ this.mContext = context;
             onPicked();
             GLES20.glViewport(0, 0, mWidth, mHeight);
             mBaseSector.setCamera(mHeadView);
+            mSphereBG.drawSelf(mHeadView, mSphereBGTextureID);
             for (BaseSector menu : mMenus) {
                 menu.setCamera(mHeadView);
             }
@@ -149,6 +156,7 @@ this.mContext = context;
                     tempId = menu.id;
                 }
             }
+
             if (tempId != -1) {
                 if (onPickupId == tempId) {
 

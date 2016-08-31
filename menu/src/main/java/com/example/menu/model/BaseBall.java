@@ -398,7 +398,6 @@ public class BaseBall extends TouchableObject {
         alTexIndex20.add(15);
         alTexIndex20.add(21);
         alTexIndex20.add(16);
-
     }
 
     public void drawSelf(int texId) {
@@ -431,7 +430,4 @@ public class BaseBall extends TouchableObject {
         //绘制纹理矩形
         GLES20.glDrawArrays(GLES20.GL_TRIANGLES, 0, vCount);
     }
-
-
-
 }
