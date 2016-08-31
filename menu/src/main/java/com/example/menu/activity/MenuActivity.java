@@ -1,4 +1,4 @@
-package com.example.menu;
+package com.example.menu.activity;
 
 import android.app.Activity;
 import android.content.pm.ActivityInfo;
@@ -7,6 +7,7 @@ import android.os.Bundle;
 import android.view.Window;
 import android.view.WindowManager;
 
+import com.example.menu.R;
 import com.example.menu.view.MenuGLSurfaceView;
 
 public class MenuActivity extends Activity {
