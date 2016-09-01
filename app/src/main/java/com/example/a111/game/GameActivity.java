@@ -1,4 +1,4 @@
-package com.example.a111.game.activity;
+package com.example.a111.game;
 
 import android.app.Activity;
 import android.content.pm.ActivityInfo;
@@ -49,7 +49,6 @@ public class GameActivity extends Activity {
                         myImageView1.setVisibility(View.GONE);
                     }
                 });
-
             }
         }).start();
     }
