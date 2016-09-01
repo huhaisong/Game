@@ -62,12 +62,14 @@ public class GameSurfaceView extends BaseGLSurfaceView {
 
     private class SceneRenderer implements GLSurfaceView.Renderer {
 
+        private boolean showMenu = true;
+        private boolean showBall = false;
+
         //可触控物体列表
         ArrayList<BaseBall> mBaseBalls = new ArrayList<>();
         //被选中物体的索引值，即id，没有被选中时索引值为-1
         int onPickupId = -1;
         long animationtimes = 400;
-
 
         private BaseBall mBall;
         private BaseBall mBall1;
@@ -176,51 +178,61 @@ public class GameSurfaceView extends BaseGLSurfaceView {
 
             //左边
             GLES20.glViewport(0, 0, mWidth / 2, mHeight);
-            //画球
             mSphereBG.drawSelf(mHeadView, mSphereBGTextureID);
-            for (BaseBall ball : mBaseBalls) {
-                ball.setCamera(mHeadView);
-                ball.drawSelf(mBallTextureId);
-                if (ball.collision) {
-                    Message message = new Message();
-                    message.what = 1111;
-                    mHandler.sendMessage(message);
-                    ball.reStartMove();
+            //画球
+            if (showBall){
+                for (BaseBall ball : mBaseBalls) {
+                    ball.setCamera(mHeadView);
+                    ball.drawSelf(mBallTextureId);
+                    if (ball.collision) {
+                        Message message = new Message();
+                        message.what = 1111;
+                        mHandler.sendMessage(message);
+                        ball.reStartMove();
+                    }
                 }
             }
+
             //画菜单
-            mBaseSector.setCamera(mHeadView);
-            for (BaseSector menu : mMenus) {
-                menu.setCamera(mHeadView);
+            if (showMenu){
+                mBaseSector.setCamera(mHeadView);
+                for (BaseSector menu : mMenus) {
+                    menu.setCamera(mHeadView);
+                }
+                mBaseSector.draw(mMenuBGTextureId);
+                mStartMenu.draw(mStartTextureId);
+                mSelectLevelMenu.draw(mSelectLevelTextureId);
+                mSetMenu.draw(mSetTextureId);
+                mTeamInformationMenu.draw(mTeamInformationTextureId);
             }
-            mBaseSector.draw(mMenuBGTextureId);
-            mStartMenu.draw(mStartTextureId);
-            mSelectLevelMenu.draw(mSelectLevelTextureId);
-            mSetMenu.draw(mSetTextureId);
-            mTeamInformationMenu.draw(mTeamInformationTextureId);
+
 
             //右边
             GLES20.glViewport(mWidth / 2, 0, mWidth / 2, mHeight);
             mSphereBG.drawSelf(mHeadView, mSphereBGTextureID);
-            for (BaseBall ball : mBaseBalls) {
-                ball.setCamera(mHeadView);
-                ball.drawSelf(mBallTextureId);
-                if (ball.collision) {
-                    Message message = new Message();
-                    message.what = 1111;
-                    mHandler.sendMessage(message);
-                    ball.reStartMove();
+            if (showBall){
+                for (BaseBall ball : mBaseBalls) {
+                    ball.setCamera(mHeadView);
+                    ball.drawSelf(mBallTextureId);
+                    if (ball.collision) {
+                        Message message = new Message();
+                        message.what = 1111;
+                        mHandler.sendMessage(message);
+                        ball.reStartMove();
+                    }
                 }
             }
-            mBaseSector.setCamera(mHeadView);
-            for (BaseSector menu : mMenus) {
-                menu.setCamera(mHeadView);
+            if (showMenu){
+                mBaseSector.setCamera(mHeadView);
+                for (BaseSector menu : mMenus) {
+                    menu.setCamera(mHeadView);
+                }
+                mBaseSector.draw(mMenuBGTextureId);
+                mStartMenu.draw(mStartTextureId);
+                mSelectLevelMenu.draw(mSelectLevelTextureId);
+                mSetMenu.draw(mSetTextureId);
+                mTeamInformationMenu.draw(mTeamInformationTextureId);
             }
-            mBaseSector.draw(mMenuBGTextureId);
-            mStartMenu.draw(mStartTextureId);
-            mSelectLevelMenu.draw(mSelectLevelTextureId);
-            mSetMenu.draw(mSetTextureId);
-            mTeamInformationMenu.draw(mTeamInformationTextureId);
         }
 
 
@@ -260,6 +272,10 @@ public class GameSurfaceView extends BaseGLSurfaceView {
                     if (ball.id == onPickupId) {
                         ball.reStartMove();
                     }
+                }
+                if (mStartMenu.id == onPickupId){
+                    showMenu = false;
+                    showBall = true;
                 }
                 for (BaseSector menu : mMenus) {
                     if (menu.id == onPickupId) {
