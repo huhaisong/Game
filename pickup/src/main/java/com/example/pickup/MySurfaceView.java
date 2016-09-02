@@ -56,8 +56,8 @@ public class MySurfaceView extends GLSurfaceView {
                 //计算仿射变换后AB两点的位置
                 float[] AB = IntersectantUtil.calculateABPosition
                         (
-                                x, //触控点X坐标
-                                y, //触控点Y坐标
+                                Sample19_1_Activity.screenWidth/2, //触控点X坐标
+                                Sample19_1_Activity.screenHeight/2, //触控点Y坐标
                                 Sample19_1_Activity.screenWidth, //屏幕宽度
                                 Sample19_1_Activity.screenHeight, //屏幕长度
                                 left, //视角left、top值

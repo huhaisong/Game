@@ -10,6 +10,7 @@ import android.opengl.Matrix;
 import android.util.AttributeSet;
 
 import com.example.a111.game.util.BitmapUtil;
+import com.google.vrtoolkit.cardboard.HeadTransform;
 import com.google.vrtoolkit.cardboard.sensors.HeadTracker;
 
 import java.io.IOException;
@@ -19,7 +20,9 @@ public class BaseGLSurfaceView extends GLSurfaceView {
 
     protected HeadTracker mHeadTracker;
     protected float[] mHeadView = new float[16];
-
+    protected HeadTransform mHeadTransform;
+    private boolean reset = false;
+    private long resetTime ;
 
     public BaseGLSurfaceView(Context context) {
         super(context);
@@ -49,6 +52,7 @@ public class BaseGLSurfaceView extends GLSurfaceView {
 
         mHeadTracker = HeadTracker.createFromContext(context);
         Matrix.setIdentityM(mHeadView, 0);
+        mHeadTransform = new HeadTransform();
     }
 
     public int initTexture(int drawableId)
@@ -184,6 +188,18 @@ public class BaseGLSurfaceView extends GLSurfaceView {
         bitmapTmp.recycle();          //纹理加载成功后释放图片
 
         return textureId;
+    }
+
+    void resetHeadView(){
+        if (System.currentTimeMillis() - resetTime >2000){
+            reset = false;
+        }
+        if (!reset){
+            mHeadTracker.stopTracking();
+            mHeadTracker.startTracking();
+            reset = true;
+            resetTime = System.currentTimeMillis();
+        }
     }
 }
 

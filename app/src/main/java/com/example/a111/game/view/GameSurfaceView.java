@@ -4,6 +4,7 @@ import java.util.ArrayList;
 
 import android.opengl.GLSurfaceView;
 import android.opengl.GLES20;
+import android.opengl.Matrix;
 import android.os.Handler;
 import android.os.Message;
 import android.util.AttributeSet;
@@ -88,6 +89,7 @@ public class GameSurfaceView extends BaseGLSurfaceView {
 
         //圆
         private BaseCircle mResetCircle;
+        float[] cameraMatrix = new float[16];
 
         //菜单
         ArrayList<BaseSector> mMenus = new ArrayList<>();
@@ -129,9 +131,8 @@ public class GameSurfaceView extends BaseGLSurfaceView {
             //背景
             mSphereBGTextureID = initTexture(R.drawable.bg);
             mSphereBG = new SphereBG();
-            mResetCircle = new BaseCircle(1.0f, 2.0f, 36);
-            //mResetCircle.rotate(90,0,0,0);
-            mResetCircle.translate(0,-20,-50);
+            //复位按钮
+            initCircle();
             //菜单
             initMenu();
             //球
@@ -178,6 +179,13 @@ public class GameSurfaceView extends BaseGLSurfaceView {
             //右边
             GLES20.glViewport(mWidth / 2, 0, mWidth / 2, mHeight);
             draw();
+        }
+
+        void initCircle() {
+            mResetCircle = new BaseCircle(1.0f, 2.0f, 36,100);
+            Matrix.setLookAtM(cameraMatrix, 0, 0, 0, 3f, 0, 0, 0f, 0f, 1.0f, 0.0f);
+            mResetCircle.setCamera(cameraMatrix);
+            mResetCircle.translate(0,-20,-50);
         }
 
         void initMenu() {
@@ -237,8 +245,8 @@ public class GameSurfaceView extends BaseGLSurfaceView {
         }
 
         void draw() {
-            mResetCircle.setCamera(mHeadView);
-            mResetCircle.drawSelf(mSphereBGTextureID);
+
+            drawResetCircle();
             mSphereBG.drawSelf(mHeadView, mSphereBGTextureID);
             if (showBall) {
                 drawBall();
@@ -249,6 +257,20 @@ public class GameSurfaceView extends BaseGLSurfaceView {
             if (showGameLevel) {
                 drawGameLevel();
             }
+        }
+
+        void drawResetCircle(){
+            float[] EulerAngles = new float[3];
+            mHeadTracker.getLastHeadView(mHeadTransform.getHeadView(),0);
+            mHeadTransform.getEulerAngles(EulerAngles, 0);
+            float move_v = -(int) (EulerAngles[0] / Math.PI * 4 * 302);
+            if (move_v >= 340)
+                move_v = 340;
+            mResetCircle.pushMatrix();
+            //mResetCircle.translate(0,move_v/8,0);
+            mResetCircle.translateByHeadView(0,move_v/8,0);
+            mResetCircle.drawSelf(mSphereBGTextureID);
+            mResetCircle.popMatrix();
         }
 
         void drawMenu() {
@@ -316,6 +338,13 @@ public class GameSurfaceView extends BaseGLSurfaceView {
                 }
             }
 
+            //计算出AB射线
+            AB = IntersectantUtil.calculateABPosition(mWidth / 2, mHeight / 2,
+                    mWidth, mHeight, left, top, near, far, cameraMatrix);
+            if(mResetCircle.isPickup(AB)){
+                tempId = mResetCircle.id;
+            }
+
             if (tempId != -1) {
                 if (onPickupId == tempId) {
 
@@ -369,6 +398,10 @@ public class GameSurfaceView extends BaseGLSurfaceView {
                     if (menu.id == onPickupId) {
                         Log.i("aaaa", "onPicked: " + onPickupId + "is on picked");
                     }
+                }
+                if (mResetCircle.id == onPickupId){
+                    resetHeadView();
+                    Log.i("aaa", "onPicked: reset");
                 }
             }
         }

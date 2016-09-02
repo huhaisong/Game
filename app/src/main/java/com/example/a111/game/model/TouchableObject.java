@@ -12,24 +12,38 @@ import com.example.a111.game.util.Vector3f;
  */
 public abstract class TouchableObject {
 
+    //保护变换矩阵的栈
+    private static float[][] mStack = new float[10][16];
+    private static int stackTop = -1;
+
     public int id;
 
     public AABB3 preBox;//仿射变换之前的包围盒
 
     //获得中心点位置和长宽高的方法
     public AABB3 getCurrBox() {
-        return preBox.setToTransformedBox(currMatrix);//获取变换后的包围盒
+
+        pushMatrix();
+        Matrix.multiplyMM(currMatrix, 0, currMatrix, 0, currMatrixByHeadView, 0);
+        AABB3 aabb3 = preBox.setToTransformedBox(currMatrix);
+        popMatrix();
+
+        Matrix.setRotateM(currMatrixByHeadView, 0, 0, 1, 0, 0);
+        return aabb3;
     }
 
     private float[] mProjMatrix = new float[16];//投影
     private float[] mVMatrix = new float[16];//摄像机位置朝向9参数矩阵
     protected float[] currMatrix;//当前变换矩阵
+    protected float[] currMatrixByHeadView;//当前变换矩阵
     private float[] mMVPMatrix = new float[16]; //总矩阵
 
     public void setInitStack()//获取不变换初始矩阵
     {
         currMatrix = new float[16];
+        currMatrixByHeadView = new float[16];
         Matrix.setRotateM(currMatrix, 0, 0, 1, 0, 0);
+        Matrix.setRotateM(currMatrixByHeadView, 0, 0, 1, 0, 0);
     }
 
     //设置透视投影参数
@@ -49,11 +63,17 @@ public abstract class TouchableObject {
         Matrix.translateM(currMatrix, 0, x, y, z);
     }
 
+    public void translateByHeadView(float x, float y, float z) {
+        Matrix.setRotateM(currMatrixByHeadView, 0, 0, 1, 0, 0);
+        Matrix.translateM(currMatrixByHeadView, 0, x, y, z);
+    }
+
     public void rotate(float angle, float x, float y, float z) {
         Matrix.rotateM(currMatrix, 0, angle, x, y, z);
     }
 
     public float[] getFinalMatrix() {
+        Matrix.multiplyMM(currMatrix, 0, currMatrix, 0, currMatrixByHeadView, 0);
         Matrix.multiplyMM(mMVPMatrix, 0, mVMatrix, 0, currMatrix, 0);
         Matrix.multiplyMM(mMVPMatrix, 0, mProjMatrix, 0, mMVPMatrix, 0);
         return mMVPMatrix;
@@ -68,5 +88,19 @@ public abstract class TouchableObject {
         AABB3 box = getCurrBox(); //获得物体AABB包围盒
         float t = box.rayIntersect(start, dir, null);//计算相交时间
         return t <= 1;
+    }
+
+    public void pushMatrix()//保护变换矩阵
+    {
+        stackTop++;
+        System.arraycopy(currMatrix, 0, mStack[stackTop], 0, 16);
+    }
+
+    public void popMatrix()//恢复变换矩阵
+    {
+        for (int i = 0; i < 16; i++) {
+            currMatrix[i] = mStack[stackTop][i];
+        }
+        stackTop--;
     }
 }

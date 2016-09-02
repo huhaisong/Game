@@ -2,6 +2,7 @@ package com.example.a111.game.model;
 
 import android.opengl.GLES20;
 
+import com.example.a111.game.util.AABB3;
 import com.example.a111.game.util.MemUtil;
 import com.example.a111.game.util.ShaderUtil;
 
@@ -43,7 +44,8 @@ public class BaseCircle extends TouchableObject {
 
     int vCount;
 
-    public BaseCircle(float scale, float r, int n) {
+    public BaseCircle(float scale, float r, int n,int id) {
+        this.id = id;
         setInitStack();
         initVertexData(scale, r, n);
         initShader();
@@ -89,6 +91,8 @@ public class BaseCircle extends TouchableObject {
             textures[stCount++] = (float) (0.5f - 0.5f * Math.sin(angradNext));//st坐标
             textures[stCount++] = (float) (0.5f - 0.5f * Math.cos(angradNext));
         }
+
+        preBox = new AABB3(vertices);
 
         mVertexBuffer = MemUtil.makeFloatBuffer(vertices);
 
