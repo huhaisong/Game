@@ -31,12 +31,12 @@ public class GameSurfaceView extends BaseGLSurfaceView {
 
     private int mWidth;
     private int mHeight;
-    float left;
-    float right;
-    float top;
-    float bottom;
-    float near;
-    float far;
+    float mLeft;
+    float mRight;
+    float mTop;
+    float mBottom;
+    float mNear;
+    float mFar;
 
     public GameSurfaceView(Context context) {
         super(context);
@@ -146,23 +146,23 @@ public class GameSurfaceView extends BaseGLSurfaceView {
             mHeight = height;
             //计算GLSurfaceView的宽高比
             float ratio = (float) width / height / 2;
-            left = right = ratio;
-            top = bottom = 1;
-            near = 2;
-            far = 500;
+            mLeft = mRight = ratio;
+            mTop = mBottom = 1;
+            mNear = 2;
+            mFar = 500;
             //设置投影矩阵
             for (BaseBall ball : mBaseBalls) {
-                ball.setProjectFrustum(-left, right, -bottom, top, near, far);
+                ball.setProjectFrustum(-mLeft, mRight, -mBottom, mTop, mNear, mFar);
             }
             for (BaseSector menu : mMenus) {
-                menu.setProjectFrustum(-left, right, -bottom, top, near, far);
+                menu.setProjectFrustum(-mLeft, mRight, -mBottom, mTop, mNear, mFar);
             }
             for (BaseSector gameLevel : mGameLevels) {
-                gameLevel.setProjectFrustum(-left, right, -bottom, top, near, far);
+                gameLevel.setProjectFrustum(-mLeft, mRight, -mBottom, mTop, mNear, mFar);
             }
-            mSectorBG.setProjectFrustum(-left, right, -bottom, top, near, far);
-            mSphereBG.setProjectFrustum(-left, right, -bottom, top, near, far);
-            mResetCircle.setProjectFrustum(-left, right, -bottom, top, near, far);
+            mSectorBG.setProjectFrustum(-mLeft, mRight, -mBottom, mTop, mNear, mFar);
+            mSphereBG.setProjectFrustum(-mLeft, mRight, -mBottom, mTop, mNear, mFar);
+            mResetCircle.setProjectFrustum(-mLeft, mRight, -mBottom, mTop, mNear, mFar);
         }
 
         public void onDrawFrame(GL10 gl) {
@@ -182,23 +182,30 @@ public class GameSurfaceView extends BaseGLSurfaceView {
         }
 
         void initCircle() {
-            mResetCircle = new BaseCircle(1.0f, 2.0f, 36,100);
+            mResetCircle = new BaseCircle(1.0f, 2.0f, 36, 100);
             Matrix.setLookAtM(cameraMatrix, 0, 0, 0, 3f, 0, 0, 0f, 0f, 1.0f, 0.0f);
             mResetCircle.setCamera(cameraMatrix);
-            mResetCircle.translate(0,-20,-50);
+            mResetCircle.translate(0, -20, -50);
         }
 
         void initMenu() {
+            int left = 1950;
+            int top = 900;
+            int widthSpan = 0;
+            int heightSpan = 45;
+            int width = 100;
+            int height = 40;
             mMenuBGTextureId = initTexture();
             mStartTextureId = initTexture(R.drawable.aa, "开始游戏");
             mSelectLevelTextureId = initTexture(R.drawable.aa, "选择关卡");
             mSetTextureId = initTexture(R.drawable.aa, "设置选项");
             mTeamInformationTextureId = initTexture(R.drawable.aa, "制作团队");
-            mSectorBG = new BaseSector(1940, 880, 120, 220, 10, 1, 3.6f, 10);
-            mStartMenu = new BaseSector(1950, 900, 100, 40, 10, 1, 3.0f, 11);
-            mSelectLevelMenu = new BaseSector(1950, 945, 100, 40, 10, 1, 3.0f, 12);
-            mSetMenu = new BaseSector(1950, 990, 100, 40, 10, 1, 3.0f, 13);
-            mTeamInformationMenu = new BaseSector(1950, 1035, 100, 40, 10, 1, 3.0f, 14);
+            mSectorBG = new BaseSector(left - 10, top - 20, 120, 220, 10, 1, 3.6f, 10);
+
+            mStartMenu = new BaseSector(left, top, width, height, 10, 1, 3.0f, 11);
+            mSelectLevelMenu = new BaseSector(left + widthSpan, top + heightSpan, width, height, 10, 1, 3.0f, 12);
+            mSetMenu = new BaseSector(left + widthSpan * 2, top + heightSpan * 2, width, height, 10, 1, 3.0f, 13);
+            mTeamInformationMenu = new BaseSector(left + widthSpan * 3, top + heightSpan * 3, width, height, 10, 1, 3.0f, 14);
             mMenus.add(mStartMenu);
             mMenus.add(mSelectLevelMenu);
             mMenus.add(mSetMenu);
@@ -259,16 +266,16 @@ public class GameSurfaceView extends BaseGLSurfaceView {
             }
         }
 
-        void drawResetCircle(){
+        void drawResetCircle() {
             float[] EulerAngles = new float[3];
-            mHeadTracker.getLastHeadView(mHeadTransform.getHeadView(),0);
+            mHeadTracker.getLastHeadView(mHeadTransform.getHeadView(), 0);
             mHeadTransform.getEulerAngles(EulerAngles, 0);
             float move_v = -(int) (EulerAngles[0] / Math.PI * 4 * 302);
             if (move_v >= 340)
                 move_v = 340;
             mResetCircle.pushMatrix();
             //mResetCircle.translate(0,move_v/8,0);
-            mResetCircle.translateByHeadView(0,move_v/8,0);
+            mResetCircle.translateByHeadView(0, move_v / 6, 0);
             mResetCircle.drawSelf(mSphereBGTextureID);
             mResetCircle.popMatrix();
         }
@@ -311,7 +318,7 @@ public class GameSurfaceView extends BaseGLSurfaceView {
         void onPicked() {
             //计算出AB射线
             float[] AB = IntersectantUtil.calculateABPosition(mWidth / 2, mHeight / 2,
-                    mWidth, mHeight, left, top, near, far, mHeadView);
+                    mWidth, mHeight, mLeft, mTop, mNear, mFar, mHeadView);
 
             int tempId = -1;
             if (showBall) {
@@ -340,8 +347,8 @@ public class GameSurfaceView extends BaseGLSurfaceView {
 
             //计算出AB射线
             AB = IntersectantUtil.calculateABPosition(mWidth / 2, mHeight / 2,
-                    mWidth, mHeight, left, top, near, far, cameraMatrix);
-            if(mResetCircle.isPickup(AB)){
+                    mWidth, mHeight, mLeft, mTop, mNear, mFar, cameraMatrix);
+            if (mResetCircle.isPickup(AB)) {
                 tempId = mResetCircle.id;
             }
 
@@ -399,7 +406,7 @@ public class GameSurfaceView extends BaseGLSurfaceView {
                         Log.i("aaaa", "onPicked: " + onPickupId + "is on picked");
                     }
                 }
-                if (mResetCircle.id == onPickupId){
+                if (mResetCircle.id == onPickupId) {
                     resetHeadView();
                     Log.i("aaa", "onPicked: reset");
                 }

@@ -24,26 +24,26 @@ public abstract class TouchableObject {
     public AABB3 getCurrBox() {
 
         pushMatrix();
-        Matrix.multiplyMM(currMatrix, 0, currMatrix, 0, currMatrixByHeadView, 0);
+        Matrix.multiplyMM(currMatrix, 0, currMatrix, 0, tempCurrMatrix, 0);
         AABB3 aabb3 = preBox.setToTransformedBox(currMatrix);
         popMatrix();
 
-        Matrix.setRotateM(currMatrixByHeadView, 0, 0, 1, 0, 0);
+        Matrix.setRotateM(tempCurrMatrix, 0, 0, 1, 0, 0);
         return aabb3;
     }
 
     private float[] mProjMatrix = new float[16];//投影
     private float[] mVMatrix = new float[16];//摄像机位置朝向9参数矩阵
     protected float[] currMatrix;//当前变换矩阵
-    protected float[] currMatrixByHeadView;//当前变换矩阵
+    protected float[] tempCurrMatrix;//当前变换矩阵
     private float[] mMVPMatrix = new float[16]; //总矩阵
 
     public void setInitStack()//获取不变换初始矩阵
     {
         currMatrix = new float[16];
-        currMatrixByHeadView = new float[16];
+        tempCurrMatrix = new float[16];
         Matrix.setRotateM(currMatrix, 0, 0, 1, 0, 0);
-        Matrix.setRotateM(currMatrixByHeadView, 0, 0, 1, 0, 0);
+        Matrix.setRotateM(tempCurrMatrix, 0, 0, 1, 0, 0);
     }
 
     //设置透视投影参数
@@ -64,8 +64,9 @@ public abstract class TouchableObject {
     }
 
     public void translateByHeadView(float x, float y, float z) {
-        Matrix.setRotateM(currMatrixByHeadView, 0, 0, 1, 0, 0);
-        Matrix.translateM(currMatrixByHeadView, 0, x, y, z);
+        Matrix.setRotateM(tempCurrMatrix, 0, 0, 1, 0, 0);
+        Matrix.translateM(tempCurrMatrix, 0, x, y, z);
+
     }
 
     public void rotate(float angle, float x, float y, float z) {
@@ -73,7 +74,7 @@ public abstract class TouchableObject {
     }
 
     public float[] getFinalMatrix() {
-        Matrix.multiplyMM(currMatrix, 0, currMatrix, 0, currMatrixByHeadView, 0);
+        Matrix.multiplyMM(currMatrix, 0, currMatrix, 0, tempCurrMatrix, 0);
         Matrix.multiplyMM(mMVPMatrix, 0, mVMatrix, 0, currMatrix, 0);
         Matrix.multiplyMM(mMVPMatrix, 0, mProjMatrix, 0, mMVPMatrix, 0);
         return mMVPMatrix;
