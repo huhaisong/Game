@@ -15,10 +15,10 @@ import javax.microedition.khronos.opengles.GL10;
 import android.content.Context;
 import android.util.Log;
 
-import com.example.a111.game.model.BaseBall;
+import com.example.a111.game.model.ball.BaseBall;
 import com.example.a111.game.R;
-import com.example.a111.game.model.BaseCircle;
-import com.example.a111.game.model.BaseSector;
+import com.example.a111.game.model.circle.BaseCircle;
+import com.example.a111.game.model.sector.BaseSector;
 import com.example.a111.game.model.SphereBG;
 import com.example.a111.game.util.IntersectantUtil;
 
@@ -107,6 +107,8 @@ public class GameSurfaceView extends BaseGLSurfaceView {
         BaseSector mGameLevel3;
 
         //纹理
+
+        private int mResetTextureId;
         int mSphereBGTextureID;
         //球
         int mBallTextureId;
@@ -149,7 +151,7 @@ public class GameSurfaceView extends BaseGLSurfaceView {
             mLeft = mRight = ratio;
             mTop = mBottom = 1;
             mNear = 2;
-            mFar = 500;
+            mFar = 1000;
             //设置投影矩阵
             for (BaseBall ball : mBaseBalls) {
                 ball.setProjectFrustum(-mLeft, mRight, -mBottom, mTop, mNear, mFar);
@@ -182,6 +184,7 @@ public class GameSurfaceView extends BaseGLSurfaceView {
         }
 
         void initCircle() {
+            mResetTextureId = initTexture();
             mResetCircle = new BaseCircle(1.0f, 2.0f, 36, 100);
             Matrix.setLookAtM(cameraMatrix, 0, 0, 0, 3f, 0, 0, 0f, 0f, 1.0f, 0.0f);
             mResetCircle.setCamera(cameraMatrix);
@@ -189,23 +192,23 @@ public class GameSurfaceView extends BaseGLSurfaceView {
         }
 
         void initMenu() {
-            int left = 1950;
-            int top = 900;
+            int left = 1890;
+            int top = 800;
             int widthSpan = 0;
-            int heightSpan = 45;
-            int width = 100;
-            int height = 40;
+            int heightSpan = 90;
+            int width = 220;
+            int height = 80;
             mMenuBGTextureId = initTexture();
             mStartTextureId = initTexture(R.drawable.aa, "开始游戏");
             mSelectLevelTextureId = initTexture(R.drawable.aa, "选择关卡");
             mSetTextureId = initTexture(R.drawable.aa, "设置选项");
             mTeamInformationTextureId = initTexture(R.drawable.aa, "制作团队");
-            mSectorBG = new BaseSector(left - 10, top - 20, 120, 220, 10, 1, 3.6f, 10);
+            mSectorBG = new BaseSector(left - 20, top - 20, width + 40, heightSpan * 4 + 40, 10, 1, 5.6f, 10);
 
-            mStartMenu = new BaseSector(left, top, width, height, 10, 1, 3.0f, 11);
-            mSelectLevelMenu = new BaseSector(left + widthSpan, top + heightSpan, width, height, 10, 1, 3.0f, 12);
-            mSetMenu = new BaseSector(left + widthSpan * 2, top + heightSpan * 2, width, height, 10, 1, 3.0f, 13);
-            mTeamInformationMenu = new BaseSector(left + widthSpan * 3, top + heightSpan * 3, width, height, 10, 1, 3.0f, 14);
+            mStartMenu = new BaseSector(left, top, width, height, 10, 1, 5.0f, 11);
+            mSelectLevelMenu = new BaseSector(left + widthSpan, top + heightSpan, width, height, 10, 1, 5.0f, 12);
+            mSetMenu = new BaseSector(left + widthSpan * 2, top + heightSpan * 2, width, height, 10, 1, 5.0f, 13);
+            mTeamInformationMenu = new BaseSector(left + widthSpan * 3, top + heightSpan * 3, width, height, 10, 1, 5.0f, 14);
             mMenus.add(mStartMenu);
             mMenus.add(mSelectLevelMenu);
             mMenus.add(mSetMenu);
@@ -213,14 +216,20 @@ public class GameSurfaceView extends BaseGLSurfaceView {
         }
 
         void initGameLevel() {
+            int left = 2150;
+            int top = 800;
+            int widthSpan = 0;
+            int heightSpan = 90;
+            int width = 220;
+            int height = 80;
             mGameLevel0TextureId = initTexture(R.drawable.aa, "关卡0");
             mGameLevel1TextureId = initTexture(R.drawable.aa, "关卡1");
             mGameLevel2TextureId = initTexture(R.drawable.aa, "关卡2");
             mGameLevel3TextureId = initTexture(R.drawable.aa, "关卡3");
-            mGameLevel0 = new BaseSector(1950, 900, 100, 40, 10, 1, 3.0f, 21);
-            mGameLevel1 = new BaseSector(1950, 945, 100, 40, 10, 1, 3.0f, 22);
-            mGameLevel2 = new BaseSector(1950, 990, 100, 40, 10, 1, 3.0f, 23);
-            mGameLevel3 = new BaseSector(1950, 1035, 100, 40, 10, 1, 3.0f, 24);
+            mGameLevel0 = new BaseSector(left, top, width, height, 10, 1, 5.0f, 21);
+            mGameLevel1 = new BaseSector(left + widthSpan, top + heightSpan, width, height, 10, 1, 5.0f, 22);
+            mGameLevel2 = new BaseSector(left + widthSpan * 2, top + heightSpan * 2, width, height, 10, 1, 5.0f, 23);
+            mGameLevel3 = new BaseSector(left + widthSpan * 3, top + heightSpan * 3, width, height, 10, 1, 5.0f, 24);
             mGameLevels.add(mGameLevel0);
             mGameLevels.add(mGameLevel1);
             mGameLevels.add(mGameLevel2);
@@ -275,8 +284,8 @@ public class GameSurfaceView extends BaseGLSurfaceView {
                 move_v = 340;
             mResetCircle.pushMatrix();
             //mResetCircle.translate(0,move_v/8,0);
-            mResetCircle.translateByHeadView(0, move_v / 6, 0);
-            mResetCircle.drawSelf(mSphereBGTextureID);
+            mResetCircle.translateByHeadView(0, move_v / 8, 0);
+            mResetCircle.drawSelf(mResetTextureId);
             mResetCircle.popMatrix();
         }
 
@@ -377,29 +386,35 @@ public class GameSurfaceView extends BaseGLSurfaceView {
                     showGameLevel = false;
                 }
                 if (mSelectLevelMenu.id == onPickupId) {
-                    showMenu = false;
+                    showMenu = true;
                     showBall = false;
                     showGameLevel = true;
                 }
                 if (mGameLevel0.id == onPickupId) {
-                    showMenu = false;
-                    showBall = true;
+                    showMenu = true;
+                    showBall = false;
                     showGameLevel = false;
+                    mSelectLevelTextureId = initTexture(R.drawable.aa, "第0关");
                 }
                 if (mGameLevel1.id == onPickupId) {
-                    showMenu = false;
-                    showBall = true;
+                    showMenu = true;
+                    showBall = false;
                     showGameLevel = false;
+                    mSelectLevelTextureId = initTexture(R.drawable.aa, "第1关");
+
                 }
                 if (mGameLevel2.id == onPickupId) {
-                    showMenu = false;
-                    showBall = true;
+                    showMenu = true;
+                    showBall = false;
                     showGameLevel = false;
+                    mSelectLevelTextureId = initTexture(R.drawable.aa, "第2关");
+
                 }
                 if (mGameLevel3.id == onPickupId) {
-                    showMenu = false;
-                    showBall = true;
+                    showMenu = true;
+                    showBall = false;
                     showGameLevel = false;
+                    mSelectLevelTextureId = initTexture(R.drawable.aa, "第3关");
                 }
                 for (BaseSector menu : mMenus) {
                     if (menu.id == onPickupId) {
