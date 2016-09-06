@@ -1,4 +1,4 @@
-package com.example.a111.game.model;
+package com.example.a111.game.model.sector;
 
 import android.opengl.GLES20;
 

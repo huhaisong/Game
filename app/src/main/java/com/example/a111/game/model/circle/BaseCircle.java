@@ -1,7 +1,8 @@
-package com.example.a111.game.model;
+package com.example.a111.game.model.circle;
 
 import android.opengl.GLES20;
 
+import com.example.a111.game.model.TouchableObject;
 import com.example.a111.game.util.AABB3;
 import com.example.a111.game.util.MemUtil;
 import com.example.a111.game.util.ShaderUtil;
@@ -35,7 +36,7 @@ public class BaseCircle extends TouchableObject {
             "void main()                         \n" +
             "{\n" +
             "   vec4 finalColor=texture2D(sTexture, vTextureCoord);\n" +
-            "   gl_FragColor = vec4(1.0,0.0,0.0,1.0);"+//finalColor;\n" +
+            "   gl_FragColor = finalColor;\n" +
             "}        ";
 
     FloatBuffer mVertexBuffer;
@@ -108,6 +109,8 @@ public class BaseCircle extends TouchableObject {
     }
 
     public void drawSelf(int texId) {
+        GLES20.glBlendFunc(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA);
+        GLES20.glEnable(GLES20.GL_BLEND);
         //制定使用某套shader程序
         GLES20.glUseProgram(mProgram);
 

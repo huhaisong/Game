@@ -1,7 +1,8 @@
-package com.example.a111.game.model;
+package com.example.a111.game.model.ball;
 
 import android.opengl.GLES20;
 
+import com.example.a111.game.model.TouchableObject;
 import com.example.a111.game.util.AABB3;
 import com.example.a111.game.util.VectorUtil;
 import com.example.a111.game.view.GameSurfaceView;

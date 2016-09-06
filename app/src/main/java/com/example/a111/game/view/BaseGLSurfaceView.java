@@ -103,12 +103,7 @@ public class BaseGLSurfaceView extends GLSurfaceView {
     {
         //生成纹理ID
         int[] textures = new int[1];
-        GLES20.glGenTextures
-                (
-                        1,          //产生的纹理id的数量
-                        textures,   //纹理id的数组
-                        0           //偏移量
-                );
+        GLES20.glGenTextures(1, textures, 0);
         int textureId = textures[0];
         GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, textureId);
         GLES20.glTexParameterf(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_NEAREST);
