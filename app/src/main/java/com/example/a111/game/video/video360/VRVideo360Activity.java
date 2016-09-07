@@ -30,7 +30,7 @@ public class VRVideo360Activity extends Activity {
         mGLSurfaceView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_HIDE_NAVIGATION);
 
         Log.i("aaa", "onCreate: "+path);
-        mGLSurfaceView.setPath(path);
+       // mGLSurfaceView.setPath(path);
         mGLSurfaceView.requestFocus();
         mGLSurfaceView.setFocusableInTouchMode(true);
     }

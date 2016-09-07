@@ -11,8 +11,8 @@ import android.os.Handler;
 import android.os.Message;
 import android.view.Surface;
 
-import com.artechnique.vrlauncher.Model.video.video2d.Constants;
-import com.artechnique.vrlauncher.Model.video.video2d.ShaderUtil;
+import com.example.a111.game.util.ShaderUtil;
+import com.example.a111.game.video.video2d.Constants;
 import com.google.vrtoolkit.cardboard.sensors.HeadTracker;
 
 import java.io.IOException;
@@ -50,7 +50,7 @@ public class VRVideo360View extends GLSurfaceView {
         Matrix.setIdentityM(mHeadView, 0);
         setRenderMode(RENDERMODE_CONTINUOUSLY);
 
-        //pathString = "/data/data/com.vstar3d.VRLauncher/1.mp4";//是这个路径吗 ？
+        pathString = "/storage/emulated/0/VRResources/360/1.mp4";//是这个路径吗 ？
     }
 
     public void setPath(String path ){

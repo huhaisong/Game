@@ -39,4 +39,9 @@ public class MediaBean {
     public String getPath() {
         return path;
     }
+
+    @Override
+    public String toString() {
+        return "path=" + path;
+    }
 }

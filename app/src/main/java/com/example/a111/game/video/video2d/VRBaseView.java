@@ -5,8 +5,8 @@ import android.graphics.Bitmap;
 import android.opengl.GLES20;
 import android.opengl.GLUtils;
 
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
+import com.example.a111.game.util.MemUtil;
+
 import java.nio.FloatBuffer;
 import java.nio.ShortBuffer;
 import java.util.EventObject;
@@ -31,7 +31,7 @@ public class VRBaseView extends EventObject {
     private FloatBuffer textureBufferLeft;
     private FloatBuffer textureBufferRight;
     private FloatBuffer vertexBuffer;
-    private ShortBuffer IndicesBuffer;
+    private ShortBuffer indicesBuffer;
     public float t;
     public float b;
     public float l;
@@ -105,7 +105,6 @@ public class VRBaseView extends EventObject {
     }
 
     protected void Draw(int attribPosition, int attribTexCoord, float[] EulerAngles, float[] matrix, int mMVPMatrixHandle) {
-
         updatecheng(EulerAngles);
         GLES20.glBlendFunc(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA);
         GLES20.glEnable(GLES20.GL_BLEND);
@@ -119,7 +118,7 @@ public class VRBaseView extends EventObject {
         if (IsOn) {
             updateMartix(matrix, mMVPMatrixHandle);
         }
-        GLES20.glDrawElements(GLES20.GL_TRIANGLES, numIndices, GLES20.GL_UNSIGNED_SHORT, IndicesBuffer);
+        GLES20.glDrawElements(GLES20.GL_TRIANGLES, numIndices, GLES20.GL_UNSIGNED_SHORT, indicesBuffer);
         if (IsOn) {
             GLES20.glUniformMatrix4fv(mMVPMatrixHandle, 1, false, matrix, 0);
         }
@@ -138,7 +137,7 @@ public class VRBaseView extends EventObject {
         GLES20.glBindTexture(GL_TEXTURE_EXTERNAL_OES, textureId);
         GLES20.glUniformMatrix4fv(mMVPMatrixHandle, 1, false, matrix, 0);
 
-        GLES20.glDrawElements(GLES20.GL_TRIANGLES, numIndices, GLES20.GL_UNSIGNED_SHORT, IndicesBuffer);
+        GLES20.glDrawElements(GLES20.GL_TRIANGLES, numIndices, GLES20.GL_UNSIGNED_SHORT, indicesBuffer);
 
     }
 
@@ -155,7 +154,7 @@ public class VRBaseView extends EventObject {
         GLES20.glBindTexture(GL_TEXTURE_EXTERNAL_OES, textureId);
         GLES20.glUniformMatrix4fv(mMVPMatrixHandle, 1, false, matrix, 0);
 
-        GLES20.glDrawElements(GLES20.GL_TRIANGLES, numIndices, GLES20.GL_UNSIGNED_SHORT, IndicesBuffer);
+        GLES20.glDrawElements(GLES20.GL_TRIANGLES, numIndices, GLES20.GL_UNSIGNED_SHORT, indicesBuffer);
 
     }
 
@@ -172,7 +171,7 @@ public class VRBaseView extends EventObject {
         GLES20.glBindTexture(GL_TEXTURE_EXTERNAL_OES, textureId);
         GLES20.glUniformMatrix4fv(mMVPMatrixHandle, 1, false, matrix, 0);
 
-        GLES20.glDrawElements(GLES20.GL_TRIANGLES, numIndices, GLES20.GL_UNSIGNED_SHORT, IndicesBuffer);
+        GLES20.glDrawElements(GLES20.GL_TRIANGLES, numIndices, GLES20.GL_UNSIGNED_SHORT, indicesBuffer);
 
     }
 
@@ -227,6 +226,8 @@ public class VRBaseView extends EventObject {
         r = (float) ((float) Math.PI - (angleFistx + (float) mWidth / (Base.MaxWidth) * (2.0f * Math.PI)));
         float vertices[] = new float[numVertices * 3];
         float texCoords[] = new float[numVertices * 2];
+        float texCoordRights[] = new float[numVertices * 2];
+        float texCoordLefts[] = new float[numVertices * 2];
         short indices[] = new short[numIndices];
 
         for (i = 0; i < numParallels + 1; i++) {
@@ -237,6 +238,12 @@ public class VRBaseView extends EventObject {
                 vertices[vertex + 2] = (float) (d * Math.sin(angleFisty + angleStepY * (float) i) * Math.cos(angleFistx + angleStepX * (float) j));
 
                 int texIndex = (i * (numSlices + 1) + j) * 2;
+                texCoordRights[texIndex + 0] = (float) j / (float) numSlices/2+0.5f;
+                texCoordRights[texIndex + 1] = ((float) i / (float) numParallels);
+
+                texCoordLefts[texIndex + 0] = (float) j / (float) numSlices/2;
+                texCoordLefts[texIndex + 1] = ((float) i / (float) numParallels);
+
                 texCoords[texIndex + 0] = (float) j / (float) numSlices;
                 texCoords[texIndex + 1] = ((float) i / (float) numParallels);
             }
@@ -254,62 +261,12 @@ public class VRBaseView extends EventObject {
             }
         }
 
-        ByteBuffer bb = ByteBuffer.allocateDirect(
-                vertices.length * 4);
-        bb.order(ByteOrder.nativeOrder());
 
-        vertexBuffer = bb.asFloatBuffer();
-        vertexBuffer.put(vertices);
-        vertexBuffer.position(0);
-
-        ByteBuffer cc = ByteBuffer.allocateDirect(
-                texCoords.length * 4);
-        cc.order(ByteOrder.nativeOrder());
-
-        textureBuffer = cc.asFloatBuffer();
-        textureBuffer.put(texCoords);
-        textureBuffer.position(0);
-
-        int size = numVertices * 2;
-        float texCoordsLeft[] = new float[size];
-        float texCoordsRight[] = new float[size];
-        for(int a = 0; a < size; ) {
-            texCoordsLeft[a] = texCoords[a] * 0.5f;
-            ++a;
-            texCoordsLeft[a] = texCoords[a];
-            ++a;
-        }
-
-        for(int a = 0; a < size; ) {
-            texCoordsRight[a] = texCoordsLeft[a] + 0.5f;
-            ++a;
-            texCoordsRight[a] = texCoordsLeft[a];
-            ++a;
-        }
-
-        ByteBuffer ccLeft = ByteBuffer.allocateDirect(
-                texCoords.length * 4);
-        cc.order(ByteOrder.nativeOrder());
-
-        textureBufferLeft = cc.asFloatBuffer();
-        textureBufferLeft.put(texCoordsLeft);
-        textureBufferLeft.position(0);
-
-        ByteBuffer ccRight = ByteBuffer.allocateDirect(
-                texCoords.length * 4);
-        cc.order(ByteOrder.nativeOrder());
-
-        textureBufferRight = cc.asFloatBuffer();
-        textureBufferRight.put(texCoordsRight);
-        textureBufferRight.position(0);
-
-        ByteBuffer dd = ByteBuffer.allocateDirect(
-                indices.length * 2);
-        dd.order(ByteOrder.nativeOrder());
-
-        IndicesBuffer = dd.asShortBuffer();
-        IndicesBuffer.put(indices);
-        IndicesBuffer.position(0);
+        vertexBuffer = MemUtil.makeFloatBuffer(vertices);
+        textureBufferLeft = MemUtil.makeFloatBuffer(texCoordLefts);
+        textureBufferRight = MemUtil.makeFloatBuffer(texCoordRights);
+        textureBuffer = MemUtil.makeFloatBuffer(texCoords);
+        indicesBuffer = MemUtil.makeShortBuffer(indices);
         return numIndices;
     }
 

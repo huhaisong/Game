@@ -26,7 +26,7 @@ public class VR2DVideoActivity extends Activity {
 
         Bundle bundle = getIntent().getExtras().getBundle("content");
         path = bundle.getString("path");
-        mVideoView.setPath(path);
+       // mVideoView.setPath(path);
     }
 
     @Override

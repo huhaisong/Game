@@ -1,12 +1,19 @@
 package com.example.a111.game.view;
 
+import java.io.File;
 import java.util.ArrayList;
 
+import android.content.ContentResolver;
+import android.content.Intent;
+import android.database.Cursor;
+import android.net.Uri;
 import android.opengl.GLSurfaceView;
 import android.opengl.GLES20;
 import android.opengl.Matrix;
+import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.provider.MediaStore;
 import android.util.AttributeSet;
 
 import javax.microedition.khronos.egl.EGLConfig;
@@ -21,6 +28,9 @@ import com.example.a111.game.model.circle.BaseCircle;
 import com.example.a111.game.model.sector.BaseSector;
 import com.example.a111.game.model.SphereBG;
 import com.example.a111.game.util.IntersectantUtil;
+import com.example.a111.game.video.MediaBean;
+import com.example.a111.game.video.video2d.VR2DVideoActivity;
+import com.example.a111.game.video.video360.VRVideo360Activity;
 
 public class GameSurfaceView extends BaseGLSurfaceView {
 
@@ -127,6 +137,7 @@ public class GameSurfaceView extends BaseGLSurfaceView {
         long startTime;
 
         public void onSurfaceCreated(GL10 gl, EGLConfig config) {
+           // getList();
             GLES20.glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
             GLES20.glEnable(GLES20.GL_DEPTH_TEST);
             GLES20.glDisable(GLES20.GL_CULL_FACE);
@@ -392,9 +403,18 @@ public class GameSurfaceView extends BaseGLSurfaceView {
                 }
                 if (mSetMenu.id == onPickupId) {
 
+                    Intent intent = new Intent(mContext, VR2DVideoActivity.class);
+                    Bundle bundle = new Bundle();
+                    bundle.putString("path", null);
+                    intent.putExtra("content", bundle);
+                    mContext.startActivity(intent);
                 }
-                if (mTeamInformationMenu.id == onPickupId){
-
+                if (mTeamInformationMenu.id == onPickupId) {
+                    Intent intent = new Intent(mContext, VRVideo360Activity.class);
+                    Bundle bundle = new Bundle();
+                    bundle.putString("path", null);
+                    intent.putExtra("content", bundle);
+                    mContext.startActivity(intent);
                 }
                 if (mGameLevel0.id == onPickupId) {
                     showMenu = true;
@@ -434,4 +454,30 @@ public class GameSurfaceView extends BaseGLSurfaceView {
             }
         }
     }
+
+
+    private ArrayList<MediaBean> mPlayVideoList360 = new ArrayList<>();
+
+    private void getList() {
+        Uri uri = MediaStore.Video.Media.EXTERNAL_CONTENT_URI;
+
+        ContentResolver mContentResolver = mContext.getContentResolver();
+        Cursor mCursor = mContentResolver.query(uri, null, null, null, null);
+        assert mCursor != null;
+        mCursor.moveToFirst();
+        int num = mCursor.getCount();
+        if (num > 0) {
+            do {
+                String path = mCursor.getString(mCursor.getColumnIndex(MediaStore.MediaColumns.DATA));
+                File f = new File(path);
+                path = f.getPath();
+                long id = mCursor.getLong(mCursor.getColumnIndex("_ID"));
+                mPlayVideoList360.add(new MediaBean(path, id, true));
+            } while (mCursor.moveToNext());
+        }
+        mCursor.close();
+
+        Log.i("aaa", "getList: "+ mPlayVideoList360.toString());
+    }
+
 }

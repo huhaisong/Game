@@ -11,6 +11,7 @@ import android.opengl.Matrix;
 import android.util.AttributeSet;
 import android.view.Surface;
 
+import com.example.a111.game.util.ShaderUtil;
 import com.google.vrtoolkit.cardboard.HeadTransform;
 import com.google.vrtoolkit.cardboard.sensors.HeadTracker;
 
@@ -28,7 +29,7 @@ public class VideoView extends GLSurfaceView {
    // private float[] mHeadView = new float[16];
 
     //private String pathString = "/storage/sdcard1/VRResources/1.mp4";
-    private String pathString = "/data/data/com.vstar3d.VRLauncher/2.mkv";
+    private String pathString = "/storage/emulated/0/tencent/MicroMsg/vproxy/y0321fj6iu2.100701.mp4";
     private SurfaceTexture mSurface;
     private MediaPlayer mediaPlayer;
 
@@ -198,13 +199,6 @@ public class VideoView extends GLSurfaceView {
             GLES20.glDisable(GLES20.GL_CULL_FACE);
 
             Matrix.setLookAtM(mVMatrix, 0, 0, 0, 3, 0f, 0f, 0f, 0f, 1.0f, 0.0f);
-
-
-
-
-
-
-
             openVideo();
 
             mVideoView = new VRBaseView(this, 1600, 700, 800, 600, 10, 1, 3.0f, mContext, 1);
@@ -250,11 +244,11 @@ public class VideoView extends GLSurfaceView {
             mSubtractVolume.Draw(maPositionHandle1, maTexCoorHandle1, EulerAngles, temp, mMVPMatrixHandle1);
 
             GLES20.glUseProgram(mProgram);
-            mVideoView.DrawLeft(maPositionHandle, maTexCoorHandle, EulerAngles, temp, mMVPMatrixHandle, mTextureID);
+            mVideoView.DrawRight(maPositionHandle, maTexCoorHandle, EulerAngles, temp, mMVPMatrixHandle, mTextureID);
 
             GLES20.glViewport(mWidth / 2, 0, mWidth / 2, mHeight);
             GLES20.glUseProgram(mProgram);
-            mVideoView.DrawRight(maPositionHandle, maTexCoorHandle, EulerAngles, temp, mMVPMatrixHandle, mTextureID);
+            mVideoView.DrawLeft(maPositionHandle, maTexCoorHandle, EulerAngles, temp, mMVPMatrixHandle, mTextureID);
             GLES20.glUseProgram(mProgram1);
             mAddVolume.Draw(maPositionHandle1, maTexCoorHandle1, EulerAngles, temp, mMVPMatrixHandle1);
             mSubtractVolume.Draw(maPositionHandle1, maTexCoorHandle1, EulerAngles, temp, mMVPMatrixHandle1);
