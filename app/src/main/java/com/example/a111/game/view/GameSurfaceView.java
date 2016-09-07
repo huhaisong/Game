@@ -201,8 +201,8 @@ public class GameSurfaceView extends BaseGLSurfaceView {
             mMenuBGTextureId = initTexture();
             mStartTextureId = initTexture(R.drawable.aa, "开始游戏");
             mSelectLevelTextureId = initTexture(R.drawable.aa, "选择关卡");
-            mSetTextureId = initTexture(R.drawable.aa, "设置选项");
-            mTeamInformationTextureId = initTexture(R.drawable.aa, "制作团队");
+            mSetTextureId = initTexture(R.drawable.aa, "播放3d视频");
+            mTeamInformationTextureId = initTexture(R.drawable.aa, "播放全景视频");
             mSectorBG = new BaseSector(left - 20, top - 20, width + 40, heightSpan * 4 + 40, 10, 1, 5.6f, 10);
 
             mStartMenu = new BaseSector(left, top, width, height, 10, 1, 5.0f, 11);
@@ -390,6 +390,12 @@ public class GameSurfaceView extends BaseGLSurfaceView {
                     showBall = false;
                     showGameLevel = true;
                 }
+                if (mSetMenu.id == onPickupId) {
+
+                }
+                if (mTeamInformationMenu.id == onPickupId){
+
+                }
                 if (mGameLevel0.id == onPickupId) {
                     showMenu = true;
                     showBall = false;
@@ -408,7 +414,6 @@ public class GameSurfaceView extends BaseGLSurfaceView {
                     showBall = false;
                     showGameLevel = false;
                     mSelectLevelTextureId = initTexture(R.drawable.aa, "第2关");
-
                 }
                 if (mGameLevel3.id == onPickupId) {
                     showMenu = true;
@@ -416,6 +421,7 @@ public class GameSurfaceView extends BaseGLSurfaceView {
                     showGameLevel = false;
                     mSelectLevelTextureId = initTexture(R.drawable.aa, "第3关");
                 }
+
                 for (BaseSector menu : mMenus) {
                     if (menu.id == onPickupId) {
                         Log.i("aaaa", "onPicked: " + onPickupId + "is on picked");

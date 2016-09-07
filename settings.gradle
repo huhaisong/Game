@@ -1,1 +1,1 @@
-include ':app', ':test', ':pickup', ':menu', ':circle'
+include ':app'
