@@ -18,6 +18,7 @@ public class BaseSector extends TouchableObject {
     private SectorProgram mSectorProgram;
 
     public BaseSector(int l, int t, int w, int h, int xParallels, int yParallels, float diameter,int id) {
+        super(BaseSector.class);
         this.id = id;
         setInitStack();
         mSectorProgram = SectorProgram.getInstance();
@@ -98,7 +99,6 @@ public class BaseSector extends TouchableObject {
     }
 
     public void draw(int mTextureId) {
-
         GLES20.glBlendFunc(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA);
         GLES20.glEnable(GLES20.GL_BLEND);
         //制定使用某套shader程序
@@ -121,5 +121,13 @@ public class BaseSector extends TouchableObject {
 
         //绘制纹理矩形
         GLES20.glDrawElements(GLES20.GL_TRIANGLES, numIndices, GLES20.GL_UNSIGNED_SHORT, IndicesBuffer);
+
+
+        isPickup();
+
+        if (isPickedUp){
+            notifyEvent(this);
+            isPickedUp = false;
+        }
     }
 }

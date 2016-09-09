@@ -46,6 +46,7 @@ public class BaseCircle extends TouchableObject {
     int vCount;
 
     public BaseCircle(float scale, float r, int n,int id) {
+        super(BaseCircle.class);
         this.id = id;
         setInitStack();
         initVertexData(scale, r, n);
@@ -109,6 +110,12 @@ public class BaseCircle extends TouchableObject {
     }
 
     public void drawSelf(int texId) {
+
+        isPickup();
+        if (isPickedUp){
+            notifyEvent(this);
+            isPickedUp = false;
+        }
         GLES20.glBlendFunc(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA);
         GLES20.glEnable(GLES20.GL_BLEND);
         //制定使用某套shader程序

@@ -190,8 +190,7 @@ public class BaseGLSurfaceView extends GLSurfaceView {
             reset = false;
         }
         if (!reset){
-            mHeadTracker.stopTracking();
-            mHeadTracker.startTracking();
+            mHeadTracker.resetTracker();
             reset = true;
             resetTime = System.currentTimeMillis();
         }

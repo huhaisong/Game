@@ -22,6 +22,9 @@ import javax.microedition.khronos.opengles.GL10;
 import android.content.Context;
 import android.util.Log;
 
+import com.example.a111.game.model.ModelEvent;
+import com.example.a111.game.model.ModelListener;
+import com.example.a111.game.model.TouchableObject;
 import com.example.a111.game.model.ball.BaseBall;
 import com.example.a111.game.R;
 import com.example.a111.game.model.circle.BaseCircle;
@@ -47,6 +50,7 @@ public class GameSurfaceView extends BaseGLSurfaceView {
     float mBottom;
     float mNear;
     float mFar;
+    boolean startActivity = false;
 
     public GameSurfaceView(Context context) {
         super(context);
@@ -70,7 +74,8 @@ public class GameSurfaceView extends BaseGLSurfaceView {
         this.mHandler = handler;
     }
 
-    private class SceneRenderer implements GLSurfaceView.Renderer {
+
+    private class SceneRenderer implements GLSurfaceView.Renderer, ModelListener {
 
         private boolean showMenu = true;
         private boolean showBall = false;
@@ -137,7 +142,8 @@ public class GameSurfaceView extends BaseGLSurfaceView {
         long startTime;
 
         public void onSurfaceCreated(GL10 gl, EGLConfig config) {
-           // getList();
+            startActivity = true;
+            getList();
             GLES20.glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
             GLES20.glEnable(GLES20.GL_DEPTH_TEST);
             GLES20.glDisable(GLES20.GL_CULL_FACE);
@@ -182,8 +188,6 @@ public class GameSurfaceView extends BaseGLSurfaceView {
 
             GLES20.glClear(GLES20.GL_DEPTH_BUFFER_BIT | GLES20.GL_COLOR_BUFFER_BIT);
 
-            onPicked();
-
             mHeadTracker.getLastHeadView(mHeadView, 0);
             //左边
             GLES20.glViewport(0, 0, mWidth / 2, mHeight);
@@ -200,6 +204,8 @@ public class GameSurfaceView extends BaseGLSurfaceView {
             Matrix.setLookAtM(cameraMatrix, 0, 0, 0, 3f, 0, 0, 0f, 0f, 1.0f, 0.0f);
             mResetCircle.setCamera(cameraMatrix);
             mResetCircle.translate(0, -20, -50);
+
+            mResetCircle.addListener((ModelListener) this);
         }
 
         void initMenu() {
@@ -212,8 +218,8 @@ public class GameSurfaceView extends BaseGLSurfaceView {
             mMenuBGTextureId = initTexture();
             mStartTextureId = initTexture(R.drawable.aa, "开始游戏");
             mSelectLevelTextureId = initTexture(R.drawable.aa, "选择关卡");
-            mSetTextureId = initTexture(R.drawable.aa, "播放3d视频");
-            mTeamInformationTextureId = initTexture(R.drawable.aa, "播放全景视频");
+            mSetTextureId = initTexture(R.drawable.aa, "3d视频");
+            mTeamInformationTextureId = initTexture(R.drawable.aa, "全景视频");
             mSectorBG = new BaseSector(left - 20, top - 20, width + 40, heightSpan * 4 + 40, 10, 1, 5.6f, 10);
 
             mStartMenu = new BaseSector(left, top, width, height, 10, 1, 5.0f, 11);
@@ -224,6 +230,12 @@ public class GameSurfaceView extends BaseGLSurfaceView {
             mMenus.add(mSelectLevelMenu);
             mMenus.add(mSetMenu);
             mMenus.add(mTeamInformationMenu);
+
+
+            for (BaseSector menu :
+                    mMenus) {
+                menu.addListener((ModelListener) this);
+            }
         }
 
         void initGameLevel() {
@@ -245,6 +257,11 @@ public class GameSurfaceView extends BaseGLSurfaceView {
             mGameLevels.add(mGameLevel1);
             mGameLevels.add(mGameLevel2);
             mGameLevels.add(mGameLevel3);
+
+            for (BaseSector gameLevel :
+                    mGameLevels) {
+                gameLevel.addListener((ModelListener) this);
+            }
         }
 
         void initBall() {
@@ -269,6 +286,10 @@ public class GameSurfaceView extends BaseGLSurfaceView {
             mBaseBalls.add(mBall7);
             mBaseBalls.add(mBall8);
             mBaseBalls.add(mBall9);
+            for (BaseBall ball :
+                    mBaseBalls) {
+                ball.addListener((ModelListener) this);
+            }
         }
 
         void draw() {
@@ -335,130 +356,94 @@ public class GameSurfaceView extends BaseGLSurfaceView {
             }
         }
 
-        void onPicked() {
-            //计算出AB射线
-            float[] AB = IntersectantUtil.calculateABPosition(mWidth / 2, mHeight / 2,
-                    mWidth, mHeight, mLeft, mTop, mNear, mFar, mHeadView);
+        @Override
+        public void onClick(ModelEvent event) {
 
-            int tempId = -1;
-            if (showBall) {
-                for (BaseBall ball : mBaseBalls) {
+            TouchableObject touchableObject = (TouchableObject) event;
 
-                    if (ball.isPickup(AB)) {
-                        tempId = ball.id;
-                        break;
-                    }
-                }
-            }
-            if (showMenu) {
-                for (BaseSector menu : mMenus) {
-                    if (menu.isPickup(AB)) {
-                        tempId = menu.id;
-                    }
-                }
-            }
-            if (showGameLevel) {
-                for (BaseSector gameLevel : mGameLevels) {
-                    if (gameLevel.isPickup(AB)) {
-                        tempId = gameLevel.id;
-                    }
-                }
+            if (touchableObject.isPickedUp) {
+
+                onPickupId = touchableObject.id;
+                touchableObject.isPickedUp = false;
             }
 
-            //计算出AB射线
-            AB = IntersectantUtil.calculateABPosition(mWidth / 2, mHeight / 2,
-                    mWidth, mHeight, mLeft, mTop, mNear, mFar, cameraMatrix);
-            if (mResetCircle.isPickup(AB)) {
-                tempId = mResetCircle.id;
+            for (BaseBall ball : mBaseBalls) {
+                if (ball.id == onPickupId) {
+                    ball.reStartMove();
+                }
             }
-
-            if (tempId != -1) {
-                if (onPickupId == tempId) {
-
-                } else {
-                    onPickupId = tempId;
-                    startTime = System.currentTimeMillis();
-                }
-            } else {
-                startTime = System.currentTimeMillis();
+            if (mStartMenu.id == onPickupId) {
+                showMenu = false;
+                showBall = true;
+                showGameLevel = false;
             }
-
-            long t = System.currentTimeMillis() - startTime;
-
-            if (t > animationtimes) {
-                for (BaseBall ball : mBaseBalls) {
-                    if (ball.id == onPickupId) {
-                        ball.reStartMove();
-                    }
-                }
-                if (mStartMenu.id == onPickupId) {
-                    showMenu = false;
-                    showBall = true;
-                    showGameLevel = false;
-                }
-                if (mSelectLevelMenu.id == onPickupId) {
-                    showMenu = true;
-                    showBall = false;
-                    showGameLevel = true;
-                }
-                if (mSetMenu.id == onPickupId) {
-
+            if (mSelectLevelMenu.id == onPickupId) {
+                showMenu = true;
+                showBall = false;
+                showGameLevel = true;
+            }
+            if (mSetMenu.id == onPickupId) {
+                if (startActivity) {
                     Intent intent = new Intent(mContext, VR2DVideoActivity.class);
                     Bundle bundle = new Bundle();
                     bundle.putString("path", null);
                     intent.putExtra("content", bundle);
                     mContext.startActivity(intent);
+                    startActivity = false;
                 }
-                if (mTeamInformationMenu.id == onPickupId) {
+            }
+            if (mTeamInformationMenu.id == onPickupId) {
+                if (startActivity) {
                     Intent intent = new Intent(mContext, VRVideo360Activity.class);
                     Bundle bundle = new Bundle();
                     bundle.putString("path", null);
                     intent.putExtra("content", bundle);
                     mContext.startActivity(intent);
+                    startActivity = false;
                 }
-                if (mGameLevel0.id == onPickupId) {
-                    showMenu = true;
-                    showBall = false;
-                    showGameLevel = false;
-                    mSelectLevelTextureId = initTexture(R.drawable.aa, "第0关");
-                }
-                if (mGameLevel1.id == onPickupId) {
-                    showMenu = true;
-                    showBall = false;
-                    showGameLevel = false;
-                    mSelectLevelTextureId = initTexture(R.drawable.aa, "第1关");
+            }
 
-                }
-                if (mGameLevel2.id == onPickupId) {
-                    showMenu = true;
-                    showBall = false;
-                    showGameLevel = false;
-                    mSelectLevelTextureId = initTexture(R.drawable.aa, "第2关");
-                }
-                if (mGameLevel3.id == onPickupId) {
-                    showMenu = true;
-                    showBall = false;
-                    showGameLevel = false;
-                    mSelectLevelTextureId = initTexture(R.drawable.aa, "第3关");
-                }
+            if (mGameLevel0.id == onPickupId) {
+                showMenu = true;
+                showBall = false;
+                showGameLevel = false;
+                mSelectLevelTextureId = initTexture(R.drawable.aa, "第0关");
+            }
 
-                for (BaseSector menu : mMenus) {
-                    if (menu.id == onPickupId) {
-                        Log.i("aaaa", "onPicked: " + onPickupId + "is on picked");
-                    }
+            if (mGameLevel1.id == onPickupId) {
+                showMenu = true;
+                showBall = false;
+                showGameLevel = false;
+                mSelectLevelTextureId = initTexture(R.drawable.aa, "第1关");
+
+            }
+            if (mGameLevel2.id == onPickupId) {
+                showMenu = true;
+                showBall = false;
+                showGameLevel = false;
+                mSelectLevelTextureId = initTexture(R.drawable.aa, "第2关");
+            }
+            if (mGameLevel3.id == onPickupId) {
+                showMenu = true;
+                showBall = false;
+                showGameLevel = false;
+                mSelectLevelTextureId = initTexture(R.drawable.aa, "第3关");
+            }
+
+            for (BaseSector menu : mMenus) {
+                if (menu.id == onPickupId) {
+                    Log.i("aaaa", "onPicked: " + onPickupId + "is on picked");
                 }
-                if (mResetCircle.id == onPickupId) {
-                    resetHeadView();
-                    Log.i("aaa", "onPicked: reset");
-                }
+            }
+            if (mResetCircle.id == onPickupId) {
+                resetHeadView();
+                Log.i("aaa", "onPicked: reset");
             }
         }
     }
 
-
-    private ArrayList<MediaBean> mPlayVideoList360 = new ArrayList<>();
-
     private void getList() {
+        ArrayList<MediaBean> mPlayVideoList360 = new ArrayList<>();
         Uri uri = MediaStore.Video.Media.EXTERNAL_CONTENT_URI;
 
         ContentResolver mContentResolver = mContext.getContentResolver();
@@ -477,7 +462,7 @@ public class GameSurfaceView extends BaseGLSurfaceView {
         }
         mCursor.close();
 
-        Log.i("aaa", "getList: "+ mPlayVideoList360.toString());
+        Log.i("aaa", "getList: " + mPlayVideoList360.toString());
     }
 
 }

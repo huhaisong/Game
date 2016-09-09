@@ -49,4 +49,11 @@ public class VR2DVideoActivity extends Activity {
         super.onStop();
         mVideoView.onStop();
     }
+
+
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+        finish();
+    }
 }

@@ -19,6 +19,7 @@ public class BaseBall extends TouchableObject {
     private ReStartMoveThread reStartMoveThread;
 
     public BaseBall(GameSurfaceView mv, float scale, float aHalf, int n, long time, int id) {
+        super(BaseBall.class);
 
         this.id = id;
         setInitStack();
@@ -404,6 +405,11 @@ public class BaseBall extends TouchableObject {
 
     public void drawSelf(int texId) {
 
+        isPickup();
+        if (isPickedUp){
+            notifyEvent(this);
+            isPickedUp = false;
+        }
         //制定使用某套shader程序
         GLES20.glUseProgram(mBallProgram.mProgram);
         //将最终变换矩阵传入shader程序
@@ -432,7 +438,5 @@ public class BaseBall extends TouchableObject {
         //绘制纹理矩形
         GLES20.glDrawArrays(GLES20.GL_TRIANGLES, 0, vCount);
     }
-
-
 
 }

@@ -29,7 +29,9 @@ public class VideoView extends GLSurfaceView {
    // private float[] mHeadView = new float[16];
 
     //private String pathString = "/storage/sdcard1/VRResources/1.mp4";
-    private String pathString = "/storage/emulated/0/tencent/MicroMsg/vproxy/y0321fj6iu2.100701.mp4";
+    //private String pathString = "/storage/emulated/0/tencent/MicroMsg/vproxy/y0321fj6iu2.100701.mp4";
+    //private String pathString = "/storage/sdcard1/2.mkv";
+    private String pathString = "/storage/sdcard1/Demo 3D[SBS] (HD - 1080P).mp4";
     private SurfaceTexture mSurface;
     private MediaPlayer mediaPlayer;
 

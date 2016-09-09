@@ -107,7 +107,6 @@ public class SphereBG {
             }
         }
 
-        //texRighttureBuffer = MemUtil.makeFloatBuffer(texRightCoords);
         vertexBuffer = MemUtil.makeFloatBuffer(vertices);
         textureBuffer = MemUtil.makeFloatBuffer(texCoords);
         IndicesBuffer = MemUtil.makeShortBuffer(indices);

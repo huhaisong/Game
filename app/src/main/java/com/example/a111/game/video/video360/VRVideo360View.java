@@ -11,6 +11,7 @@ import android.os.Handler;
 import android.os.Message;
 import android.view.Surface;
 
+import com.example.a111.game.util.MemUtil;
 import com.example.a111.game.util.ShaderUtil;
 import com.example.a111.game.video.video2d.Constants;
 import com.google.vrtoolkit.cardboard.sensors.HeadTracker;

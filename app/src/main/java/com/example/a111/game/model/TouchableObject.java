@@ -4,21 +4,31 @@ package com.example.a111.game.model;
 import android.opengl.Matrix;
 
 import com.example.a111.game.util.AABB3;
+import com.example.a111.game.util.IntersectantUtil;
 import com.example.a111.game.util.Vector3f;
 
 /*
  * 可以被触控到的抽象类，
  * 物体继承了该类可以被触控到
  */
-public abstract class TouchableObject {
+public abstract class TouchableObject extends ModelEvent {
 
     //保护变换矩阵的栈
     private static float[][] mStack = new float[10][16];
     private static int stackTop = -1;
-
+    long startTime;
     public int id;
 
+    public boolean isPickedUp = false;
+    private boolean isFocused = false;
+
+    float mNear, mFar;
+
     public AABB3 preBox;//仿射变换之前的包围盒
+
+    public TouchableObject(Object source) {
+        super(source);
+    }
 
     //获得中心点位置和长宽高的方法
     public AABB3 getCurrBox() {
@@ -27,8 +37,6 @@ public abstract class TouchableObject {
         Matrix.multiplyMM(currMatrix, 0, currMatrix, 0, tempCurrMatrix, 0);
         AABB3 aabb3 = preBox.setToTransformedBox(currMatrix);
         popMatrix();
-
-        Matrix.setRotateM(tempCurrMatrix, 0, 0, 1, 0, 0);
         return aabb3;
     }
 
@@ -48,8 +56,12 @@ public abstract class TouchableObject {
 
     //设置透视投影参数
     public void setProjectFrustum(float left, float right, float bottom, float top, float near, float far) {
+
+        this.mNear = near;
+        this.mFar = far;
         Matrix.frustumM(mProjMatrix, 0, left, right, bottom, top, near, far);
     }
+
 
     public void setCamera(float[] headView) {
         this.mVMatrix = headView;
@@ -66,7 +78,6 @@ public abstract class TouchableObject {
     public void translateByHeadView(float x, float y, float z) {
         Matrix.setRotateM(tempCurrMatrix, 0, 0, 1, 0, 0);
         Matrix.translateM(tempCurrMatrix, 0, x, y, z);
-
     }
 
     public void rotate(float angle, float x, float y, float z) {
@@ -80,7 +91,9 @@ public abstract class TouchableObject {
         return mMVPMatrix;
     }
 
-    public boolean isPickup(float[] AB) {
+    public void isPickup() {
+
+        float[] AB = IntersectantUtil.calculateCenterABPosition(mNear, mFar, mVMatrix);
         //射线AB
         Vector3f start = new Vector3f(AB[0], AB[1], AB[2]);//起点
         Vector3f end = new Vector3f(AB[3], AB[4], AB[5]);//终点
@@ -88,7 +101,25 @@ public abstract class TouchableObject {
         //判断是否相交  计算AB线段与物体包围盒的最佳交点(与A点最近的交点)
         AABB3 box = getCurrBox(); //获得物体AABB包围盒
         float t = box.rayIntersect(start, dir, null);//计算相交时间
-        return t <= 1;
+
+        if (t <= 1) {
+
+        } else {
+            isFocused = false;
+        }
+        if (t <= 1 && !isPickedUp) {
+
+            if (!isFocused) {
+                startTime = System.currentTimeMillis();
+            }
+            isFocused = true;
+            long time = System.currentTimeMillis() - startTime;
+            if (time >= 1000) {
+                isPickedUp = true;
+                isFocused = false;
+                startTime = Long.MAX_VALUE;
+            }
+        }
     }
 
     public void pushMatrix()//保护变换矩阵
@@ -104,4 +135,5 @@ public abstract class TouchableObject {
         }
         stackTop--;
     }
+
 }

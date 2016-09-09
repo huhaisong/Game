@@ -42,16 +42,30 @@ public class IntersectantUtil {
         float by = yFar;
         float bz = -far;
         //通过摄像机坐标系中A、B两点的坐标，求世界坐标系中A、B两点的坐标
-        float[] A = fromPtoPreP(mVMatrix,new float[]{ax, ay, az});
-        float[] B = fromPtoPreP(mVMatrix,new float[]{bx, by, bz});
+        float[] A = fromPtoPreP(mVMatrix, new float[]{ax, ay, az});
+        float[] B = fromPtoPreP(mVMatrix, new float[]{bx, by, bz});
         return new float[]{//返回最终的AB两点坐标
                 A[0], A[1], A[2],
                 B[0], B[1], B[2]
         };
     }
 
+
+    public static float[] calculateCenterABPosition(float near, float far, float[] mVMatrix) {
+        float az = -near;
+        float bz = -far;
+        //通过摄像机坐标系中A、B两点的坐标，求世界坐标系中A、B两点的坐标
+        float[] A = fromPtoPreP(mVMatrix, new float[]{0, 0, az});
+        float[] B = fromPtoPreP(mVMatrix, new float[]{0, 0, bz});
+        return new float[]{//返回最终的AB两点坐标
+                A[0], A[1], A[2],
+                B[0], B[1], B[2]
+        };
+    }
+
+
     //通过摄像机变换后的点求变换前的点的方法：乘以摄像机矩阵的逆矩阵
-    public static float[] fromPtoPreP(float[] mVMatrix,float[] p) {
+    public static float[] fromPtoPreP(float[] mVMatrix, float[] p) {
         //通过逆变换，得到变换之前的点
         float[] inverM = new float[16];//获取逆变换矩阵
         Matrix.invertM(inverM, 0, mVMatrix, 0);//求逆矩阵

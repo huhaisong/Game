@@ -55,4 +55,11 @@ public class VRVideo360Activity extends Activity {
         super.onStop();
         mGLSurfaceView.onStop();
     }
+
+
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+        finish();
+    }
 }
