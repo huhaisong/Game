@@ -28,10 +28,15 @@ import com.example.a111.game.model.TouchableObject;
 import com.example.a111.game.model.ball.BaseBall;
 import com.example.a111.game.R;
 import com.example.a111.game.model.circle.BaseCircle;
+import com.example.a111.game.model.column.BallColumn;
+import com.example.a111.game.model.column.LevelColumn;
+import com.example.a111.game.model.column.MenuColumn;
 import com.example.a111.game.model.sector.BaseSector;
 import com.example.a111.game.model.SphereBG;
+import com.example.a111.game.util.BitmapUtil;
 import com.example.a111.game.util.IntersectantUtil;
 import com.example.a111.game.video.MediaBean;
+import com.example.a111.game.video.video2d.Constants;
 import com.example.a111.game.video.video2d.VR2DVideoActivity;
 import com.example.a111.game.video.video360.VRVideo360Activity;
 
@@ -74,72 +79,22 @@ public class GameSurfaceView extends BaseGLSurfaceView {
         this.mHandler = handler;
     }
 
-
     private class SceneRenderer implements GLSurfaceView.Renderer, ModelListener {
 
-        private boolean showMenu = true;
-        private boolean showBall = false;
-        private boolean showGameLevel = false;
+        BallColumn mBallColumn;
+        LevelColumn mLevelColumn;
+        MenuColumn mMenuColumn;
 
-        //可触控物体列表
-        ArrayList<BaseBall> mBaseBalls = new ArrayList<>();
-        //被选中物体的索引值，即id，没有被选中时索引值为-1
         int onPickupId = -1;
-        long animationtimes = 1000;
-
         //背景
         private SphereBG mSphereBG;
-
-        //球
-        private BaseBall mBall;
-        private BaseBall mBall1;
-        private BaseBall mBall2;
-        private BaseBall mBall3;
-        private BaseBall mBall4;
-        private BaseBall mBall5;
-        private BaseBall mBall6;
-        private BaseBall mBall7;
-        private BaseBall mBall8;
-        private BaseBall mBall9;
-
         //圆
         private BaseCircle mResetCircle;
         float[] cameraMatrix = new float[16];
 
-        //菜单
-        ArrayList<BaseSector> mMenus = new ArrayList<>();
-        BaseSector mSectorBG;
-        BaseSector mStartMenu;
-        BaseSector mSelectLevelMenu;
-        BaseSector mSetMenu;
-        BaseSector mTeamInformationMenu;
-
-        //关卡
-        ArrayList<BaseSector> mGameLevels = new ArrayList<>();
-        BaseSector mGameLevel0;
-        BaseSector mGameLevel1;
-        BaseSector mGameLevel2;
-        BaseSector mGameLevel3;
-
         //纹理
-
         private int mResetTextureId;
         int mSphereBGTextureID;
-        //球
-        int mBallTextureId;
-        //菜单
-        int mMenuBGTextureId;
-        int mStartTextureId;
-        int mSelectLevelTextureId;
-        int mSetTextureId;
-        int mTeamInformationTextureId;
-        //关卡
-        int mGameLevel0TextureId;
-        int mGameLevel1TextureId;
-        int mGameLevel2TextureId;
-        int mGameLevel3TextureId;
-
-        long startTime;
 
         public void onSurfaceCreated(GL10 gl, EGLConfig config) {
             startActivity = true;
@@ -148,16 +103,16 @@ public class GameSurfaceView extends BaseGLSurfaceView {
             GLES20.glEnable(GLES20.GL_DEPTH_TEST);
             GLES20.glDisable(GLES20.GL_CULL_FACE);
             //背景
-            mSphereBGTextureID = initTexture(R.drawable.bg);
+            mSphereBGTextureID = BitmapUtil.initTexture(GameSurfaceView.this, R.drawable.bg);
             mSphereBG = new SphereBG();
             //复位按钮
             initCircle();
             //菜单
-            initMenu();
+            mMenuColumn = new MenuColumn(GameSurfaceView.this, this);
             //球
-            initBall();
+            mBallColumn = new BallColumn(GameSurfaceView.this, this);
             //关卡
-            initGameLevel();
+            mLevelColumn = new LevelColumn(GameSurfaceView.this, this);
         }
 
         public void onSurfaceChanged(GL10 gl, int width, int height) {
@@ -170,16 +125,10 @@ public class GameSurfaceView extends BaseGLSurfaceView {
             mNear = 2;
             mFar = 1000;
             //设置投影矩阵
-            for (BaseBall ball : mBaseBalls) {
-                ball.setProjectFrustum(-mLeft, mRight, -mBottom, mTop, mNear, mFar);
-            }
-            for (BaseSector menu : mMenus) {
-                menu.setProjectFrustum(-mLeft, mRight, -mBottom, mTop, mNear, mFar);
-            }
-            for (BaseSector gameLevel : mGameLevels) {
-                gameLevel.setProjectFrustum(-mLeft, mRight, -mBottom, mTop, mNear, mFar);
-            }
-            mSectorBG.setProjectFrustum(-mLeft, mRight, -mBottom, mTop, mNear, mFar);
+            mBallColumn.setProjectFrustum(-mLeft, mRight, -mBottom, mTop, mNear, mFar);
+            mLevelColumn.setProjectFrustum(-mLeft, mRight, -mBottom, mTop, mNear, mFar);
+            mMenuColumn.setProjectFrustum(-mLeft, mRight, -mBottom, mTop, mNear, mFar);
+
             mSphereBG.setProjectFrustum(-mLeft, mRight, -mBottom, mTop, mNear, mFar);
             mResetCircle.setProjectFrustum(-mLeft, mRight, -mBottom, mTop, mNear, mFar);
         }
@@ -199,111 +148,27 @@ public class GameSurfaceView extends BaseGLSurfaceView {
         }
 
         void initCircle() {
-            mResetTextureId = initTexture();
+            mResetTextureId = BitmapUtil.initTexture();
             mResetCircle = new BaseCircle(1.0f, 2.0f, 36, 100);
             Matrix.setLookAtM(cameraMatrix, 0, 0, 0, 3f, 0, 0, 0f, 0f, 1.0f, 0.0f);
             mResetCircle.setCamera(cameraMatrix);
             mResetCircle.translate(0, -20, -50);
 
-            mResetCircle.addListener((ModelListener) this);
-        }
-
-        void initMenu() {
-            int left = 1890;
-            int top = 800;
-            int widthSpan = 0;
-            int heightSpan = 90;
-            int width = 220;
-            int height = 80;
-            mMenuBGTextureId = initTexture();
-            mStartTextureId = initTexture(R.drawable.aa, "开始游戏");
-            mSelectLevelTextureId = initTexture(R.drawable.aa, "选择关卡");
-            mSetTextureId = initTexture(R.drawable.aa, "3d视频");
-            mTeamInformationTextureId = initTexture(R.drawable.aa, "全景视频");
-            mSectorBG = new BaseSector(left - 20, top - 20, width + 40, heightSpan * 4 + 40, 10, 1, 5.6f, 10);
-
-            mStartMenu = new BaseSector(left, top, width, height, 10, 1, 5.0f, 11);
-            mSelectLevelMenu = new BaseSector(left + widthSpan, top + heightSpan, width, height, 10, 1, 5.0f, 12);
-            mSetMenu = new BaseSector(left + widthSpan * 2, top + heightSpan * 2, width, height, 10, 1, 5.0f, 13);
-            mTeamInformationMenu = new BaseSector(left + widthSpan * 3, top + heightSpan * 3, width, height, 10, 1, 5.0f, 14);
-            mMenus.add(mStartMenu);
-            mMenus.add(mSelectLevelMenu);
-            mMenus.add(mSetMenu);
-            mMenus.add(mTeamInformationMenu);
-
-
-            for (BaseSector menu :
-                    mMenus) {
-                menu.addListener((ModelListener) this);
-            }
-        }
-
-        void initGameLevel() {
-            int left = 2150;
-            int top = 800;
-            int widthSpan = 0;
-            int heightSpan = 90;
-            int width = 220;
-            int height = 80;
-            mGameLevel0TextureId = initTexture(R.drawable.aa, "关卡0");
-            mGameLevel1TextureId = initTexture(R.drawable.aa, "关卡1");
-            mGameLevel2TextureId = initTexture(R.drawable.aa, "关卡2");
-            mGameLevel3TextureId = initTexture(R.drawable.aa, "关卡3");
-            mGameLevel0 = new BaseSector(left, top, width, height, 10, 1, 5.0f, 21);
-            mGameLevel1 = new BaseSector(left + widthSpan, top + heightSpan, width, height, 10, 1, 5.0f, 22);
-            mGameLevel2 = new BaseSector(left + widthSpan * 2, top + heightSpan * 2, width, height, 10, 1, 5.0f, 23);
-            mGameLevel3 = new BaseSector(left + widthSpan * 3, top + heightSpan * 3, width, height, 10, 1, 5.0f, 24);
-            mGameLevels.add(mGameLevel0);
-            mGameLevels.add(mGameLevel1);
-            mGameLevels.add(mGameLevel2);
-            mGameLevels.add(mGameLevel3);
-
-            for (BaseSector gameLevel :
-                    mGameLevels) {
-                gameLevel.addListener((ModelListener) this);
-            }
-        }
-
-        void initBall() {
-            mBallTextureId = initTexture(R.drawable.aaa);
-            mBall = new BaseBall(GameSurfaceView.this, 2, 1.6f, 15, 0, 0);
-            mBall1 = new BaseBall(GameSurfaceView.this, 2, 1.6f, 15, 100, 1);
-            mBall2 = new BaseBall(GameSurfaceView.this, 2, 1.6f, 15, 200, 2);
-            mBall3 = new BaseBall(GameSurfaceView.this, 2, 1.6f, 15, 300, 3);
-            mBall4 = new BaseBall(GameSurfaceView.this, 2, 1.6f, 15, 400, 4);
-            mBall5 = new BaseBall(GameSurfaceView.this, 2, 1.6f, 15, 500, 5);
-            mBall6 = new BaseBall(GameSurfaceView.this, 2, 1.6f, 15, 600, 6);
-            mBall7 = new BaseBall(GameSurfaceView.this, 2, 1.6f, 15, 700, 7);
-            mBall8 = new BaseBall(GameSurfaceView.this, 2, 1.6f, 15, 800, 8);
-            mBall9 = new BaseBall(GameSurfaceView.this, 2, 1.6f, 15, 900, 9);
-            mBaseBalls.add(mBall);
-            mBaseBalls.add(mBall1);
-            mBaseBalls.add(mBall2);
-            mBaseBalls.add(mBall3);
-            mBaseBalls.add(mBall4);
-            mBaseBalls.add(mBall5);
-            mBaseBalls.add(mBall6);
-            mBaseBalls.add(mBall7);
-            mBaseBalls.add(mBall8);
-            mBaseBalls.add(mBall9);
-            for (BaseBall ball :
-                    mBaseBalls) {
-                ball.addListener((ModelListener) this);
-            }
+            mResetCircle.addListener(this);
         }
 
         void draw() {
 
             drawResetCircle();
             mSphereBG.drawSelf(mHeadView, mSphereBGTextureID);
-            if (showBall) {
-                drawBall();
+            if (mBallColumn.show) {
+                mBallColumn.drawBall(mHeadView, mHandler);
             }
-            if (showMenu) {
-                drawMenu();
+            if (mMenuColumn.show) {
+                mMenuColumn.drawMenu(mHeadView);
             }
-            if (showGameLevel) {
-                drawGameLevel();
+            if (mLevelColumn.show) {
+                mLevelColumn.drawGameLevel(mHeadView);
             }
         }
 
@@ -321,123 +186,24 @@ public class GameSurfaceView extends BaseGLSurfaceView {
             mResetCircle.popMatrix();
         }
 
-        void drawMenu() {
-            mSectorBG.setCamera(mHeadView);
-            for (BaseSector menu : mMenus) {
-                menu.setCamera(mHeadView);
-            }
-            mSectorBG.draw(mMenuBGTextureId);
-            mStartMenu.draw(mStartTextureId);
-            mSelectLevelMenu.draw(mSelectLevelTextureId);
-            mSetMenu.draw(mSetTextureId);
-            mTeamInformationMenu.draw(mTeamInformationTextureId);
-        }
-
-        void drawGameLevel() {
-            for (BaseSector gameLevel : mGameLevels) {
-                gameLevel.setCamera(mHeadView);
-            }
-            mGameLevel0.draw(mGameLevel0TextureId);
-            mGameLevel1.draw(mGameLevel1TextureId);
-            mGameLevel2.draw(mGameLevel2TextureId);
-            mGameLevel3.draw(mGameLevel3TextureId);
-        }
-
-        void drawBall() {
-            for (BaseBall ball : mBaseBalls) {
-                ball.setCamera(mHeadView);
-                ball.drawSelf(mBallTextureId);
-                if (ball.collision) {
-                    Message message = new Message();
-                    message.what = 1111;
-                    mHandler.sendMessage(message);
-                    ball.reStartMove();
-                }
-            }
-        }
 
         @Override
         public void onClick(ModelEvent event) {
 
             TouchableObject touchableObject = (TouchableObject) event;
-
             if (touchableObject.isPickedUp) {
-
                 onPickupId = touchableObject.id;
                 touchableObject.isPickedUp = false;
             }
 
-            for (BaseBall ball : mBaseBalls) {
-                if (ball.id == onPickupId) {
-                    ball.reStartMove();
-                }
-            }
-            if (mStartMenu.id == onPickupId) {
-                showMenu = false;
-                showBall = true;
-                showGameLevel = false;
-            }
-            if (mSelectLevelMenu.id == onPickupId) {
-                showMenu = true;
-                showBall = false;
-                showGameLevel = true;
-            }
-            if (mSetMenu.id == onPickupId) {
-                if (startActivity) {
-                    Intent intent = new Intent(mContext, VR2DVideoActivity.class);
-                    Bundle bundle = new Bundle();
-                    bundle.putString("path", null);
-                    intent.putExtra("content", bundle);
-                    mContext.startActivity(intent);
-                    startActivity = false;
-                }
-            }
-            if (mTeamInformationMenu.id == onPickupId) {
-                if (startActivity) {
-                    Intent intent = new Intent(mContext, VRVideo360Activity.class);
-                    Bundle bundle = new Bundle();
-                    bundle.putString("path", null);
-                    intent.putExtra("content", bundle);
-                    mContext.startActivity(intent);
-                    startActivity = false;
-                }
-            }
+            mBallColumn.onClick(onPickupId);
 
-            if (mGameLevel0.id == onPickupId) {
-                showMenu = true;
-                showBall = false;
-                showGameLevel = false;
-                mSelectLevelTextureId = initTexture(R.drawable.aa, "第0关");
-            }
+            mLevelColumn.onClick(onPickupId, mMenuColumn, mBallColumn);
 
-            if (mGameLevel1.id == onPickupId) {
-                showMenu = true;
-                showBall = false;
-                showGameLevel = false;
-                mSelectLevelTextureId = initTexture(R.drawable.aa, "第1关");
+            mMenuColumn.onClick(onPickupId, mContext, mBallColumn, mLevelColumn);
 
-            }
-            if (mGameLevel2.id == onPickupId) {
-                showMenu = true;
-                showBall = false;
-                showGameLevel = false;
-                mSelectLevelTextureId = initTexture(R.drawable.aa, "第2关");
-            }
-            if (mGameLevel3.id == onPickupId) {
-                showMenu = true;
-                showBall = false;
-                showGameLevel = false;
-                mSelectLevelTextureId = initTexture(R.drawable.aa, "第3关");
-            }
-
-            for (BaseSector menu : mMenus) {
-                if (menu.id == onPickupId) {
-                    Log.i("aaaa", "onPicked: " + onPickupId + "is on picked");
-                }
-            }
             if (mResetCircle.id == onPickupId) {
-                resetHeadView();
-                Log.i("aaa", "onPicked: reset");
+                mHeadTracker.resetTracker();
             }
         }
     }
@@ -464,5 +230,4 @@ public class GameSurfaceView extends BaseGLSurfaceView {
 
         Log.i("aaa", "getList: " + mPlayVideoList360.toString());
     }
-
 }

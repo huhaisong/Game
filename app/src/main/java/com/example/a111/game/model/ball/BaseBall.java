@@ -18,7 +18,7 @@ public class BaseBall extends TouchableObject {
     private BallProgram mBallProgram;
     private ReStartMoveThread reStartMoveThread;
 
-    public BaseBall(GameSurfaceView mv, float scale, float aHalf, int n, long time, int id) {
+    public BaseBall( float scale, float aHalf, int n, long time, int id) {
         super(BaseBall.class);
 
         this.id = id;

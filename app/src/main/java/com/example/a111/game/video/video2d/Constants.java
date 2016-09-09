@@ -22,6 +22,11 @@ public class Constants {
     public static void setCanvas(Canvas canvas) {
         Constants.canvas = canvas;
     }
+
+
+   // public static boolean showMenu = true;
+   // public static boolean showBall = false;
+   // public static boolean showGameLevel = false;
     
     
 }
