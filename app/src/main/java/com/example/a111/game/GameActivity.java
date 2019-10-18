@@ -10,6 +10,7 @@ import android.view.Window;
 import android.view.WindowManager;
 import android.widget.ImageView;
 
+import com.example.a111.game.util.PermissionUtils;
 import com.example.a111.game.view.GameSurfaceView;
 import com.example.a111.game.R;
 
@@ -56,6 +57,10 @@ public class GameActivity extends Activity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        //申请SD卡权限
+        if (!PermissionUtils.isGrantSDCardReadPermission(this)) {
+            PermissionUtils.requestSDCardReadPermission(this, 100);
+        }
         //设置为全屏
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
